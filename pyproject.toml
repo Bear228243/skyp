@@ -24,7 +24,7 @@ test = "pytest"
 test-cov = "pytest --cov=src"
 lint = "flake8 src/"
 type-check = "mypy src/"
-format = "isort src/ &&
+format = "isort src/ &&"
 
 # Добавьте эту секцию для настройки pytest
 [tool.pytest.ini_options]
