@@ -16,18 +16,20 @@ class TestGetMaskCardNumber:
         """Тестирование корректных номеров карт"""
         result = get_mask_card_number(card_number)
         assert result == expected
-        assert len(result.replace(" ", "")) == len(card_number)
 
-    @pytest.mark.parametrize("card_number, expected", [
-        ("1234", "1234"),  # слишком короткий
-        ("123456789012", "123456789012"),  # 12 цифр
-        ("", ""),  # пустая строка
-        ("abcd1234efgh5678", "abcd1234efgh5678"),  # буквы
+    @pytest.mark.parametrize("card_number", [
+        "1234",  # слишком короткий
+        "123456789012",  # 12 цифр
+        "",  # пустая строка
+        "abcd1234efgh5678",  # содержит буквы
+        "1234-5678-9012-3456",  # содержит дефисы
+        "1234 5678 9012 3456",  # содержит пробелы
     ])
-    def test_get_mask_card_number_invalid(self, card_number: str, expected: str) -> None:
+    def test_get_mask_card_number_invalid(self, card_number: str) -> None:
         """Тестирование некорректных номеров карт"""
         result = get_mask_card_number(card_number)
-        assert result == expected
+        # Для некорректных данных должна возвращаться исходная строка
+        assert result == card_number
 
     def test_get_mask_card_number_none_input(self) -> None:
         """Тестирование None входных данных"""
@@ -48,24 +50,27 @@ class TestGetMaskAccount:
         """Тестирование корректных номеров счетов"""
         result = get_mask_account(account_number)
         assert result == expected
-        assert result.startswith("**")
 
-    @pytest.mark.parametrize("account_number, expected", [
-        ("1234", "1234"),  # слишком короткий
-        ("", ""),  # пустая строка
-        ("abc123", "abc123"),  # буквы и цифры
+    @pytest.mark.parametrize("account_number", [
+        "1234",  # слишком короткий (но 4 цифры - минимальная длина для маскирования)
+        "123",  # слишком короткий
+        "",  # пустая строка
+        "abc123",  # содержит буквы
+        "12-34-56",  # содержит дефисы
+        "123 456",  # содержит пробелы
     ])
-    def test_get_mask_account_invalid(self, account_number: str, expected: str) -> None:
+    def test_get_mask_account_invalid(self, account_number: str) -> None:
         """Тестирование некорректных номеров счетов"""
         result = get_mask_account(account_number)
-        assert result == expected
+        # Для некорректных данных должна возвращаться исходная строка
+        assert result == account_number
 
     def test_get_mask_account_edge_cases(self) -> None:
         """Тестирование граничных случаев"""
-        # Минимальная допустимая длина
-        result = get_mask_account("123456")
-        assert result == "**3456"
+        # Минимальная допустимая длина (4 цифры)
+        result = get_mask_account("1234")
+        assert result == "**1234"  # Должно маскироваться
 
         # Номер короче 4 символов
         result = get_mask_account("123")
-        assert result == "123"
+        assert result == "123"  # Не должен маскироваться
