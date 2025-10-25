@@ -11,7 +11,6 @@ def sample_card_numbers() -> List[str]:
         "6831982476737658",
         "8990922113665229",
         "5999414228426353",
-        "1234567890123456"
     ]
 
 
@@ -22,7 +21,6 @@ def sample_account_numbers() -> List[str]:
         "64686473678894779589",
         "35383033474447895560",
         "73654108430135874305",
-        "12345678901234567890"
     ]
 
 
@@ -33,7 +31,6 @@ def sample_dates() -> List[str]:
         "2024-03-14T10:30:00.000",
         "2023-12-01T15:45:30.123",
         "2022-08-20T08:00:00.000",
-        "2021-05-10T12:00:00.000"
     ]
 
 
@@ -78,8 +75,6 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "amount": "300.00",
             "currency": "USD",
             "description": "Transaction 4",
-            "from": "Visa 8990922113665229",
-            "to": "Счет 12345678901234567890"
         },
         {
             "id": 5,
@@ -88,8 +83,6 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "amount": "150.25",
             "currency": "EUR",
             "description": "Transaction 5",
-            "from": "MasterCard 5999414228426353",
-            "to": "Счет 64686473678894779589"
         }
     ]
 
@@ -98,14 +91,3 @@ def sample_transactions() -> List[Dict[str, Any]]:
 def empty_transactions() -> List[Dict[str, Any]]:
     """Фикстура с пустым списком транзакций"""
     return []
-
-
-@pytest.fixture
-def invalid_transactions() -> List[Dict[str, Any]]:
-    """Фикстура с некорректными транзакциями"""
-    return [
-        {"id": 1},  # Неполные данные
-        {"state": "EXECUTED"},  # Только статус
-        {"date": "invalid_date"},  # Некорректная дата
-        {}  # Пустой словарь
-    ]

@@ -6,15 +6,16 @@ def mask_account_card(data: str) -> str:
     if not data:
         return data
 
-    if data.lower().startswith("счет"):
-        # Извлекаем номер счета
+    # Проверяем на счет
+    if "счет" in data.lower():
         parts = data.split()
         if len(parts) >= 2:
             account_number = parts[-1]
-            masked_account = get_mask_account(account_number)
-            return f"{' '.join(parts[:-1])} {masked_account}"
+            if account_number.isdigit() and len(account_number) >= 4:
+                masked_account = get_mask_account(account_number)
+                return f"{' '.join(parts[:-1])} {masked_account}"
 
-    # Пытаемся найти номер карты (16 цифр)
+    # Проверяем на карту (ищем 16 цифр подряд)
     words = data.split()
     for word in words:
         if word.isdigit() and len(word) == 16:
