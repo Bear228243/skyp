@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 
+
 def filter_by_state(operations: List[Dict[str, Any]], state: str = 'EXECUTED') -> List[Dict[str, Any]]:
     """
     Фильтрует список операций по значению ключа 'state'.
