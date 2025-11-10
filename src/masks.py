@@ -1,24 +1,14 @@
-def get_mask_card_number(card_number: int) -> str:
-    """
-    Маскирует номер банковской карты по правилу: XXXX XX** **** XXXX.
+def get_mask_card_number(card_number: str) -> str:
+    """Маскирует номер карты, оставляя первые 6 и последние 4 цифры"""
+    if not card_number or len(card_number) < 16 or not card_number.isdigit():
+        return card_number
 
-    :param card_number: Номер карты в виде целого числа.
-    :return: Замаскированный номер карты в формате строки.
-    """
-    card_str = str(card_number)
-    if len(card_str) != 16:
-        raise ValueError("Номер карты должен содержать 16 цифр.")
-    return f"{card_str[:4]} {card_str[4:6]}** **** {card_str[-4:]}"
+    return f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
 
 
-def get_mask_account(account_number: int) -> str:
-    """
-    Маскирует номер банковского счета по правилу: **XXXX.
+def get_mask_account(account_number: str) -> str:
+    """Маскирует номер счета, оставляя последние 4 цифры"""
+    if not account_number or len(account_number) < 4 or not account_number.isdigit():
+        return account_number
 
-    :param account_number: Номер счета в виде целого числа.
-    :return: Замаскированный номер счета в формате строки.
-    """
-    account_str = str(account_number)
-    if len(account_str) < 4:
-        raise ValueError("Номер счета должен содержать минимум 4 цифры.")
-    return f"**{account_str[-4:]}"
+    return f"**{account_number[-4:]}"

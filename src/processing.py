@@ -1,22 +1,20 @@
 from typing import List, Dict, Any
 
-def filter_by_state(operations: List[Dict[str, Any]], state: str = 'EXECUTED') -> List[Dict[str, Any]]:
-    """
-    Фильтрует список операций по значению ключа 'state'.
 
-    :param operations: Список словарей с операциями.
-    :param state: Желаемое состояние операции (по умолчанию 'EXECUTED').
-    :return: Новый список операций с заданным состоянием.
-    """
-    return [op for op in operations if op.get('state') == state]
+def filter_by_state(transactions: List[Dict[str, Any]], state: str = "EXECUTED") -> List[Dict[str, Any]]:
+    """Фильтрует транзакции по статусу"""
+    if not transactions:
+        return []
+
+    return [transaction for transaction in transactions if transaction.get("state") == state]
 
 
-def sort_by_date(operations: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
-    """
-    Сортирует список операций по дате (ключ 'date').
+def sort_by_date(transactions: List[Dict[str, Any]], descending: bool = True) -> List[Dict[str, Any]]:
+    """Сортирует транзакции по дате"""
+    if not transactions:
+        return []
 
-    :param operations: Список словарей с операциями.
-    :param reverse: Порядок сортировки (True — по убыванию, False — по возрастанию).
-    :return: Новый отсортированный список операций.
-    """
-    return sorted(operations, key=lambda x: x['date'], reverse=reverse)
+    def get_date_key(transaction: Dict[str, Any]) -> str:
+        return transaction.get("date", "")
+
+    return sorted(transactions, key=get_date_key, reverse=descending)
