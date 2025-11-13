@@ -162,3 +162,27 @@ result2 = process_text("hello")  # Лог в файл operations.log
 poetry run pytest --cov=src --cov-report=html:coverage_html
 ```
 Отчёт будет доступен в появившейся папке. Открыть файл для просмотра можно в браузере, для детального изучения информации.
+
+## Модули для работы с JSON и конвертацией валют
+
+### Описание
+Новые модули предоставляют функционал для чтения JSON-файлов с транзакциями и конвертации валют через внешнее API.
+
+### Модуль utils.file_operations
+
+#### `read_json_file(file_path)`
+**Читает JSON-файл и возвращает список транзакций.**
+
+**Параметры:**
+- `file_path` (str): Путь к JSON-файлу
+
+**Возвращает:**
+- List[Dict]: Список словарей с транзакциями. Возвращает пустой список если файл не найден, пустой или содержит не список.
+
+**Пример использования:**
+```
+from src.utils.file_operations import read_json_file
+
+transactions = read_json_file("data/operations.json")
+print(f"Загружено {len(transactions)} транзакций")
+```

@@ -21,3 +21,14 @@ mypy>=1.0.0
 
 # Типы для python-dateutil (для mypy)
 types-python-dateutil>=2.8.0
+
+# Для работы с HTTP запросами
+requests>=2.28.0
+
+# Для работы с переменными окружения
+python-dotenv>=0.19.0
+
+# Для мокинга в тестах
+pytest-mock>=3.0.0
+
+types-requests>=2.28.0
