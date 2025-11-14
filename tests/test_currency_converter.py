@@ -12,7 +12,7 @@ from src.external_api.currency_converter import (
     CurrencyConverter,
     get_amount_in_rubles
 )
-from src.utils.file_operations import get_transaction_amount, get_transaction_currency
+from src.utils_file_operations import get_transaction_amount, get_transaction_currency
 
 
 @pytest.fixture
@@ -265,7 +265,7 @@ def test_currency_codes_extraction():
     """
     Тест извлечения кодов валют из реальных данных.
     """
-    from src.utils.file_operations import get_transaction_currency
+    from src.utils_file_operations import get_transaction_currency
 
     test_cases = [
         ({"operationAmount": {"amount": "100", "currency": {"code": "RUB"}}}, "RUB"),

@@ -9,7 +9,7 @@ import tempfile
 import pytest
 from unittest.mock import mock_open, patch
 
-from src.utils.file_operations import (
+from src.utils_file_operations import (
     read_json_file,
     get_transaction_amount,
     get_transaction_currency

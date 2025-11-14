@@ -86,7 +86,7 @@ class CurrencyConverter:
             KeyError: Если в транзакции отсутствуют необходимые ключи
             ValueError: Если сумма не может быть преобразована или произошла ошибка конвертации
         """
-        from src.utils.file_operations import get_transaction_amount, get_transaction_currency
+        from src.utils_file_operations import get_transaction_amount, get_transaction_currency
 
         try:
             amount = get_transaction_amount(transaction)
@@ -125,3 +125,4 @@ def get_amount_in_rubles(transaction: Dict[str, Any]) -> float:
 
    """
     return converter.convert_to_rubles(transaction)
+
