@@ -1,26 +1,32 @@
-def read_json_file(file_path: str) -> List[Dict[str, Any]]: 
-    """ 
-    Читает JSON-файл и возвращает список словарей с данными о транзакциями. 
+"""
+Модуль для работы с файлами операций над банковскими картами.
 
-    Args:
-        file_path: Путь к JSON-файлу
+Предоставляет функции для чтения JSON-файлов с транзакциями.
+"""
 
-    Returns:
-        Список словарей с данными о транзакциях. 
-        Если файл не найден, пустой или содержит не список, то возвращает пустой список.
+import json
+import os
+from typing import Any, Dict, List
 
-    Raises:
-        FileNotFoundError: Если файл не существует
-        JSONDecodeError: Если файл содержит некорректный JSON
-    """ 
-    if not os.path.exists(file_path): 
-        print(f"Файл {file_path} не найден") 
-        return [] 
+def read_json_file(file_path: str) -> List[Dict[str, Any]]:
+    """
+    Читает JSON-файл и возвращает список словарей с данными о транзакциях.
 
-    try: 
-        with open(file_path, 'r', encoding='utf-8') as file: 
-            data = json.load(file) 
+    :param file_path: Путь к JSON-файлу
+    :return: Список словарей с данными о транзакциях.
+             Если файл не найден, пустой или содержит не список, то возвращает пустой список.
+    """
+    # Проверяем существует ли файл
+    if not os.path.exists(file_path):
+        print(f"Файл {file_path} не найден")
+        return []
 
+    try:
+        # Открываем и читаем файл
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+
+        # Проверяем, что данные являются списком
         if not isinstance(data, list): 
             print(f"Файл {file_path} не содержит список") 
             return [] 
