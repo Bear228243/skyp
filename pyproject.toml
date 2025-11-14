@@ -70,7 +70,9 @@ exclude = ["venv"]
 source = ["src"]
 omit = [
     "*/tests/*",
-    "*/test_*"
+    "*/test_*",
+    "*/.venv/*",
+    "*/__pycache__/*"
 ]
 
 [tool.coverage.report]
@@ -84,8 +86,14 @@ exclude_lines = [
     "if 0:",
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod"
+    "@(abc\\.)?abstractmethod",
+    "^\\s*class Abstract",
+    "^\\s*def abstract"
 ]
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "Coverage Report - Homework 4"
 
 [build-system]
 requires = ["poetry-core"]

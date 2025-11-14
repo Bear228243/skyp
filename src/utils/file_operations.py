@@ -24,7 +24,7 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
 
     try:
         # Открываем и читаем файл
-        with open(file_path, 'r', encodings='utf-8') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             data = json.load(file)
 
         # Проверяем, что данные являются списком

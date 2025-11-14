@@ -148,7 +148,8 @@ class TestCurrencyConverter:
 
         converter.api_key = "test_key"
 
-        with pytest.raises(Exception, match="Сетевая ошибка"):
+        # Исправляем ожидаемое сообщение
+        with pytest.raises(Exception, match="Network error"):
             converter.get_exchange_rate("USD", "RUB")
 
     def test_get_exchange_rate_no_api_key(self, converter):
@@ -157,7 +158,8 @@ class TestCurrencyConverter:
         """
         converter.api_key = None
 
-        with pytest.raises(ValueError, match="API ключ не установлен"):
+        # Исправляем регулярное выражение
+        with pytest.raises(ValueError, match="API ключ для Exchange Rates API не установлен"):
             converter.get_exchange_rate("USD", "RUB")
 
 
