@@ -9,9 +9,12 @@ from typing import Dict, Any
 import requests
 from dotenv import load_dotenv
 
+from src.logging_config import get_currency_converter_logger
+
 # Загружаем переменные окружения из .env файла
 load_dotenv()
 
+logger = get_currency_converter_logger()
 
 class CurrencyConverter:
     """
@@ -24,6 +27,11 @@ class CurrencyConverter:
         """
         self.api_key = os.getenv("EXCHANGE_RATE_API_KEY")
         self.base_url = "https://api.apilayer.com/exchangerates_data/latest"
+
+        if not self.api_key:
+            logger.warning("API ключ для Exchange Rates API не установлен в переменных окружения")
+        else:
+            logger.debug("CurrencyConverter инициализирован с API ключом")
 
     def get_exchange_rate(self, from_currency: str, to_currency: str = "RUB") -> float:
         """
@@ -41,8 +49,9 @@ class CurrencyConverter:
             requests.RequestException: Если произошла сетевая ошибка
         """
         if not self.api_key:
-            raise ValueError("API ключ для Exchange Rates API не установлен. "
-                             "Убедитесь, что переменная EXCHANGE_RATE_API_KEY установлена в .env файле.")
+            error_msg = "API ключ для Exchange Rates API не установлен."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
         headers = {
             "apikey": self.api_key
@@ -54,24 +63,39 @@ class CurrencyConverter:
         }
 
         try:
+            logger.debug(f"Отправка запроса к API: {self.base_url}")
             response = requests.get(self.base_url, headers=headers, params=params, timeout=10)
             response.raise_for_status()
 
             data = response.json()
+            logger.debug(f"Получаем ответ от IP: {data}")
 
             if not data.get("success", True):
                 error_info = data.get("error", {})
-                raise ValueError(f"API ошибка: {error_info.get('info', 'Неизвестная ошибка')}")
+                error_msg = f"API ошибка: {error_info.get('info', 'Неизвестная ошибка')}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
             rates = data.get("rates", {})
             if to_currency not in rates:
-                raise ValueError(f"Курс для валюты {to_currency} не найден в ответе API")
+                error_msg = f"Курс для валюты {to_currency} не найден в ответе API"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
-            return rates[to_currency]
+            rate = rates[to_currency]
+            logger.info(f"Успешно получен курс обмена: {from_currency} -> {to_currency} = {rate}")
+            return rate
 
         except requests.RequestException as e:
-            raise requests.RequestException(f"Сетевая ошибка при запросе к API: {e}")
+            error_msg = f"Сетевая ошибка при запросе к API: {e}"
+            logger.error(error_msg)
+            raise requests.RequestException(error_msg)
+        except Exception as e:
+            error_msg = f"Неожиданная ошибка при получении курса обмена: {e}"
+            logger.error(error_msg)
+            raise
 
+        
     def convert_to_rubles(self, transaction: Dict[str, Any]) -> float:
         """
         Конвертирует сумму транзакции в рубли.

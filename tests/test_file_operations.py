@@ -234,3 +234,23 @@ def test_integration_read_and_process(temp_json_file):
 
     assert amount2 == 50.00
     assert currency2 == "USD"
+
+
+def test_read_json_file_logging(tmp_path):
+    """
+    Тест логирования при чтении JSON-файла.
+    """
+    # Создаем временный JSON файл
+    json_file = tmp_path / "test.json"
+    json_file.write_text('[{"id": 1, "name": "test"}]', encoding='utf-8')
+
+    result = read_json_file(str(json_file))
+    assert result == [{"id": 1, "name": "test"}]
+
+
+def test_read_nonexistent_file_logging():
+    """
+    Тест логирования при попытке чтения несуществующего файла.
+    """
+    result = read_json_file("nonexistent.json")
+    assert result == []
