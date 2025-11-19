@@ -95,7 +95,7 @@ class CurrencyConverter:
             logger.error(error_msg)
             raise
 
-        
+
     def convert_to_rubles(self, transaction: Dict[str, Any]) -> float:
         """
         Конвертирует сумму транзакции в рубли.
@@ -148,5 +148,35 @@ def get_amount_in_rubles(transaction: Dict[str, Any]) -> float:
         Сумму транзакции в рублях как float
 
    """
-    return converter.convert_to_rubles(transaction)
+    logger.debug(f"Конвертация суммы транзакции в рубли: {transaction.get('id', 'Unknown')}")
+
+    from src.utils_file_operations import get_transaction_amount, get_transaction_currency
+
+    try:
+        amount = get_transaction_amount(transaction)
+        currency = get_transaction_currency(transaction)
+
+        logger.debug(f"Транзакция {transaction.get('id', 'Unknown')}: сумма={amount}, валюта={currency}")
+
+        # Если валюта уже рубли, возвращаем сумму как есть
+        if currency == "RUB":
+            logger.debug(f"Транзакция уже в рублях, конвертация не требуется")
+            return amount
+
+        # Конвертируем USD и EUR в рубли
+        if currency in ["USD", "EUR"]:
+            logger.info(f"Конвертация {currency} в RUB для транзакции {transaction.get('id', 'Unknown')}")
+            exchange_rate = converter.get_exchange_rate(currency, "RUB")
+            result = amount * exchange_rate
+            logger.info(f"Успешная конвертация: {amount} {currency} = {result} RUB")
+            return result
+
+        # Для других валют возвращаем исходную сумму
+        logger.warning(f"Валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма")
+        return amount
+
+    except (KeyError, ValueError) as e:
+        error_msg = f"Ошибка при обработке транзакции {transaction.get('id', 'Unknown')}: {e}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
 
