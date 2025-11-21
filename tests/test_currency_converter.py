@@ -6,13 +6,11 @@
 import os
 import pytest
 from unittest.mock import Mock, patch
-from decimal import Decimal
 
 from src.external_api.currency_converter import (
     CurrencyConverter,
     get_amount_in_rubles
 )
-from src.utils_file_operations import get_transaction_amount, get_transaction_currency
 
 
 @pytest.fixture

@@ -126,8 +126,7 @@ class CurrencyConverter:
                 return amount * exchange_rate
 
             # Для других валют возвращаем исходную сумму (или можно выбросить исключение)
-            print(f"Внимание: валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма.")
-            return amount
+            logger.warning(f"Внимание: валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма.")
 
         except (KeyError, ValueError) as e:
             raise ValueError(f"Ошибка при обработке транзакции: {e}")

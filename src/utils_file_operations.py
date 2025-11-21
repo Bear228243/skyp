@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 
 from src.logging_config import get_utils_logger
 
-#Create loger for module utils
+#Create logger for module utils
 logger = get_utils_logger()
 
 def read_json_file(file_path: str) -> List[Dict[str, Any]]:
@@ -41,7 +41,7 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
             logger.error(error_msg)
             return []
 
-        logger.info(f"Успешное чтение JSON-файла:{file_path}. Заргужено {len(data)} записей.")
+        logger.info(f"Успешное чтение JSON-файла:{file_path}. Загружено {len(data)} записей.")
         return data
 
     except json.JSONDecodeError as e:
@@ -53,61 +53,66 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
         logger.error(error_msg)
         return []
 
+
 def get_transaction_amount(transaction: Dict[str, Any]) -> float:
     """
-    Извлекает сумму транзакции из словаря транзакций.
+    Извлекает сумму транзакции из словаря транзакции.
 
-    :param
-        transaction: Словарь с данными о транзакциях.
-    :return:
-        Сумму транзакций как float
-    :exceptions:
-        ValueError: Если сумма не может быть преобразована в float.
-        KeyError: Если в транзакции отсутствует необходимые данные.
+    Аргументы:
+        transaction: Словарь с данными о транзакции
+
+    Возвращает:
+        Сумма транзакции как float
+
+    Исключения:
+        KeyError: Если ключи 'operationAmount' или 'amount' отсутствуют
+        ValueError: Если сумму невозможно преобразовать в float
     """
-    logger.info(f"Извлечение суммы из транзакции: {transaction.get('id', 'Unknown')}")
+    logger.debug(f"Извлечение суммы для транзакции: {transaction.get('id', 'Unknown')}")
 
     try:
-        # Получаем сумму из operationAmount -> amount
-        amount_str = transaction["operationAmount"]["amount"]
-        return float(amount_str)
+        operation_amount = transaction['operationAmount']
+        amount_str = operation_amount['amount']
 
-        logger.debug(f"Успешное извлечение суммы: {amount} из транзакции {transaction.get('id', 'Unknown')}")
+        amount = float(amount_str)
+        logger.debug(f"Успешно извлечена сумма: {amount} для транзакции {transaction.get('id', 'Unknown')}")
         return amount
 
     except KeyError as e:
-        error_msg = f"Отсутствует обязательный ключ в транзакции: {e}"
+        error_msg = f"Отсутствует обязательный ключ в транзакции {transaction.get('id', 'Unknown')}: {e}"
         logger.error(error_msg)
         raise KeyError(error_msg)
-    except (ValueError, TypeError) as e:
-        amount_str = transaction.get("operationAmount", {}).get("amount", "Unknown")
-        error_msg = f"Невозможно преобразовать сумму {amount_str} в float: {e}"
+    except ValueError as e:
+        error_msg = f"Невозможно преобразовать сумму '{amount_str}' в float для транзакции {transaction.get('id', 'Unknown')}: {e}"
         logger.error(error_msg)
         raise ValueError(error_msg)
 
 
 def get_transaction_currency(transaction: Dict[str, Any]) -> str:
     """
-    Извлекает код валюты транзакции.
+    Извлекает валюту транзакции из словаря транзакции.
 
     Аргументы:
         transaction: Словарь с данными о транзакции
 
     Возвращает:
-        Код валюты транзакции (например, "RUB", "USD", "EUR")
+        Код валюты транзакции
 
     Исключения:
-        KeyError: Если в транзакции отсутствуют необходимые ключи
+        KeyError: Если ключи 'operationAmount' или 'currency' отсутствуют
     """
-    logger.debug(f"Извлечение валюты из транзакции: {transaction.get('id', 'Unknown')}")
+    logger.debug(f"Извлечение валюты для транзакции: {transaction.get('id', 'Unknown')}")
 
     try:
-        currency = transaction["operationAmount"]["currency"]["code"]
-        logger.debug(f"Успешное извлечение валюты: {currency} из транзакции {transaction.get('id', 'Unknown')}")
-        return currency
+        operation_amount = transaction['operationAmount']
+        currency_info = operation_amount['currency']
+        currency_code = currency_info['code']
+
+        logger.debug(f"Успешно извлечена валюта: {currency_code} для транзакции {transaction.get('id', 'Unknown')}")
+        return currency_code
 
     except KeyError as e:
-        error_msg = f"Отсутствует обязательный ключ валюты в транзакции: {e}"
+        error_msg = f"Отсутствует обязательный ключ в транзакции {transaction.get('id', 'Unknown')}: {e}"
         logger.error(error_msg)
         raise KeyError(error_msg)
 

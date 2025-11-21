@@ -1,6 +1,6 @@
 from src.masks import get_mask_account, get_mask_card_number
 from src.processing import filter_by_state, sort_by_date
-
+from src.utils_file_operations import get_transaction_amount, get_transaction_currency
 
 data = [
     {'id': 41428829, 'state': 'EXECUTED', 'date': '2019-07-03T18:35:29.512364'},
@@ -20,3 +20,23 @@ print(executed)
 print("\n=== Сортировка по дате ===")
 sorted_data = sort_by_date(data)
 print(sorted_data)
+
+# Демонстрация работы utils
+print("\n=== Работа с транзакциями ===")
+sample_transaction = {
+    'id': 1,
+    'operationAmount': {
+        'amount': '100.50',
+        'currency': {
+            'code': 'USD'
+        }
+    }
+}
+
+try:
+    amount = get_transaction_amount(sample_transaction)
+    currency = get_transaction_currency(sample_transaction)
+    print(f"Сумма: {amount}, Валюта: {currency}")
+except (KeyError, ValueError) as e:
+    print(f"Ошибка: {e}")
+

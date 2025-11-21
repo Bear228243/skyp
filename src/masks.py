@@ -55,9 +55,6 @@ def get_mask_account(account_number: str) -> str:
         logger.info(f"Успешно замаскирован номер счета: {account_number} -> {masked_number}")
         return masked_number
 
-        logger.info(f"Успешно замаскирован номер счета: {account_number} -> {masked_number}")
-        return masked_number
-
     except Exception as e:
         error_msg = f"Ошибка при маскировании номера счета {account_number}: {e}"
         logger.error(error_msg)
