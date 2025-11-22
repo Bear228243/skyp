@@ -48,6 +48,11 @@ def get_mask_account(account_number: str) -> str:
         logger.error(error_msg)
         raise ValueError(error_msg)
 
+    if not account_number.isdigit():
+        error_msg = f"Номер счета содержит недопустимые символы: {account_number}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
     try:
         # Маскируем номер счета, оставляя только последние 4 цифры
         masked_number = f"**{account_number[-4:]}"

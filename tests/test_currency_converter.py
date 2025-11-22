@@ -11,6 +11,7 @@ from src.external_api.currency_converter import (
     CurrencyConverter,
     get_amount_in_rubles
 )
+from decimal import Decimal
 
 
 @pytest.fixture

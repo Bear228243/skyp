@@ -24,8 +24,8 @@ class TestGetMaskCardNumber:
     ])
     def test_get_mask_card_number_invalid(self, card_number: str) -> None:
         """Тестирование некорректных номеров карт"""
-        result = get_mask_card_number(card_number)
-        assert result == card_number
+        with pytest.raises(ValueError):
+            get_mask_card_number(card_number)
 
 
 class TestGetMaskAccount:
@@ -48,8 +48,8 @@ class TestGetMaskAccount:
     ])
     def test_get_mask_account_invalid(self, account_number: str) -> None:
         """Тестирование некорректных номеров счетов"""
-        result = get_mask_account(account_number)
-        assert result == account_number
+        with pytest.raises(ValueError):
+            get_mask_account(account_number)
 
     def test_get_mask_account_minimum_length(self) -> None:
         """Тестирование минимальной длины номера счета"""
