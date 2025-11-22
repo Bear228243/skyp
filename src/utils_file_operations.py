@@ -9,8 +9,9 @@ from typing import Any, Dict, List
 
 from src.logging_config import get_utils_logger
 
-#Create logger for module utils
+# Create logger for module utils
 logger = get_utils_logger()
+
 
 def read_json_file(file_path: str) -> List[Dict[str, Any]]:
     """
@@ -49,7 +50,7 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
         logger.error(error_msg)
         return []
     except Exception as e:
-        error_msg = "Неожиданная ошибка при чтении файла {file_path}: {e}"
+        error_msg = f"Неожиданная ошибка при чтении файла {file_path}: {e}"
         logger.error(error_msg)
         return []
 

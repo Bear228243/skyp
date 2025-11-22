@@ -2,14 +2,15 @@ from src.logging_config import get_masks_logger
 
 logger = get_masks_logger()
 
+
 def get_mask_card_number(card_number: str) -> str:
     """Маскирует номер карты, оставляя первые 6 и последние 4 цифры"""
     logger.debug(f"Попытка маскировки номера карты: {card_number}")
 
-    #Delete space for check
+    # Delete space for check
     cleaned_number = card_number.replace(' ', '')
 
-    #Check len numb card
+    # Check len numb card
     if len(cleaned_number) != 16:
         error_msg = f"Неверная длина номера карты: {len(cleaned_number)}. Ожидается 16 цифр"
         logger.error(error_msg)
@@ -36,13 +37,11 @@ def get_mask_card_number(card_number: str) -> str:
         raise
 
 
-
-
 def get_mask_account(account_number: str) -> str:
     """Маскирует номер счета, оставляя последние 4 цифры"""
     logger.debug(f"Попытка маскирования номера счета: {account_number}")
 
-    #Check len numb card(min reasonable len)
+    # Check len numb card(min reasonable len)
     if len(account_number) < 4:
         error_msg = f"Слишком короткий номер счёта: {account_number}"
         logger.error(error_msg)

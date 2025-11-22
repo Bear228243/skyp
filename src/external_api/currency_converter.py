@@ -16,6 +16,7 @@ load_dotenv()
 
 logger = get_currency_converter_logger()
 
+
 class CurrencyConverter:
     """
     Класс для конвертации валют через Exchange Rates Data API.
@@ -95,7 +96,6 @@ class CurrencyConverter:
             logger.error(error_msg)
             raise
 
-
     def convert_to_rubles(self, transaction: Dict[str, Any]) -> float:
         """
         Конвертирует сумму транзакции в рубли.
@@ -126,7 +126,8 @@ class CurrencyConverter:
                 return amount * exchange_rate
 
             # Для других валют возвращаем исходную сумму (или можно выбросить исключение)
-            logger.warning(f"Внимание: валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма.")
+            logger.warning(
+                f"Внимание: валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма.")
 
         except (KeyError, ValueError) as e:
             raise ValueError(f"Ошибка при обработке транзакции: {e}")
@@ -159,7 +160,7 @@ def get_amount_in_rubles(transaction: Dict[str, Any]) -> float:
 
         # Если валюта уже рубли, возвращаем сумму как есть
         if currency == "RUB":
-            logger.debug(f"Транзакция уже в рублях, конвертация не требуется")
+            logger.debug("Транзакция уже в рублях, конвертация не требуется")
             return amount
 
         # Конвертируем USD и EUR в рубли
@@ -178,4 +179,3 @@ def get_amount_in_rubles(transaction: Dict[str, Any]) -> float:
         error_msg = f"Ошибка при обработке транзакции {transaction.get('id', 'Unknown')}: {e}"
         logger.error(error_msg)
         raise ValueError(error_msg)
-
