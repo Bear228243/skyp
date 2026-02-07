@@ -42,7 +42,7 @@ class TestSortByDate:
         assert result[0]["date"] == "2024-03-14T10:30:00.000"
 
     def test_sort_by_date_ascending(self, sample_transactions) -> None:
-        """Тестирование сортировки по возрастанию"""
+        """Тестирование сортировка по возрастанию"""
         result = sort_by_date(sample_transactions, descending=False)
         dates = [item["date"] for item in result]
         assert dates == sorted(dates)

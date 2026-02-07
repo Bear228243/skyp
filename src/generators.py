@@ -1,9 +1,6 @@
-"""
-Модуль для генерации и фильтрации данных транзакций.
-Предоставляет функции-генераторы для работы с большими объемами данных.
-"""
+"""Модуль с генераторами для работы с транзакциями."""
 
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, List, Generator
 
 
 def filter_by_currency(transactions: List[Dict], currency_code: str) -> Iterator[Dict]:
@@ -13,22 +10,17 @@ def filter_by_currency(transactions: List[Dict], currency_code: str) -> Iterator
     Функция-генератор, которая проходит по списку транзакций и возвращает
     только те транзакции, валюта которых соответствует заданной.
 
-    Аргументы:
+    Args:
         transactions: Список словарей с транзакциями
         currency_code: Код валюты для фильтрации (например, "USD", "RUB")
 
-    Возвращает:
-        Итератор, который выдает транзакции с указанной валютой
+    Yields:
+        Транзакции с указанной валютой
     """
-    # Проходим по всем транзакциям в списке
     for transaction in transactions:
-        # Получаем информацию о сумме операции
         operation_amount = transaction.get("operationAmount", {})
-        # Получаем информацию о валюте
         currency = operation_amount.get("currency", {})
-        # Проверяем, совпадает ли код валюты с искомым
         if currency.get("code") == currency_code:
-            # Возвращаем транзакцию через yield (функция-генератор)
             yield transaction
 
 
@@ -39,16 +31,16 @@ def transaction_descriptions(transactions: List[Dict]) -> Iterator[str]:
     Функция-генератор, которая извлекает описание из каждой транзакции
     и возвращает их по одному.
 
-    Аргументы:
+    Args:
         transactions: Список словарей с транзакциями
 
-    Возвращает:
-        Итератор, который выдает описания транзакций
+    Yields:
+        Описания транзакций
     """
-    # Проходим по всем транзакциям
     for transaction in transactions:
-        # Извлекаем описание и возвращаем его через yield
-        yield transaction["description"]
+        description = transaction.get("description")
+        if description:
+            yield description
 
 
 def card_number_generator(start: int, stop: int) -> Iterator[str]:
@@ -58,20 +50,36 @@ def card_number_generator(start: int, stop: int) -> Iterator[str]:
     Генератор создает номера карт в формате XXXX XXXX XXXX XXXX,
     где X - цифра номера карты. Номера генерируются от start до stop включительно.
 
-    Аргументы:
+    Args:
         start: Начальный номер (включительно)
         stop: Конечный номер (включительно)
 
-    Возвращает:
-        Итератор, который выдает отформатированные номера карт
+    Yields:
+        Отформатированные номера карт
     """
-    # Генерируем числа в заданном диапазоне
     for number in range(start, stop + 1):
-        # Форматируем число как 16-значную строку с ведущими нулями
         card_number = str(number).zfill(16)
-        # Разбиваем на группы по 4 цифры и объединяем с пробелами
         formatted_number = " ".join([
-            card_number[i:i + 4] for i in range(0, 16, 4)  # Группы: 0-4, 4-8, 8-12, 12-16
+            card_number[i:i + 4] for i in range(0, 16, 4)
         ])
-        # Возвращаем отформатированный номер через yield
         yield formatted_number
+
+
+def card_number_range_generator(start: str, end: str) -> Iterator[str]:
+    """
+    Генерирует номера карт в заданном диапазоне.
+
+    Args:
+        start: Начальный номер в формате "XXXX XXXX XXXX XXXX"
+        end: Конечный номер в формате "XXXX XXXX XXXX XXXX"
+
+    Yields:
+        Номера карт в заданном диапазоне
+    """
+    # Убираем пробелы для вычислений
+    start_num = int(start.replace(" ", ""))
+    end_num = int(end.replace(" ", ""))
+
+    for number in range(start_num, end_num + 1):
+        card_number = str(number).zfill(16)
+        yield " ".join([card_number[i:i + 4] for i in range(0, 16, 4)])

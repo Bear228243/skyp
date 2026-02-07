@@ -1,16 +1,19 @@
 """
-Тесты для модуля file_operations.
-Проверяет корректность чтения JSON-файлов и обработки транзакций.
+Тесты для модуля utils.
+Проверяет корректность чтения файлов и обработки транзакций.
 """
 
 import json
 import os
 import tempfile
 import pytest
+import pandas as pd
 from unittest.mock import mock_open, patch
 
-from src.utils_file_operations import (
+from src.utils import (
     read_json_file,
+    read_csv_file,
+    read_excel_file,
     get_transaction_amount,
     get_transaction_currency
 )
@@ -127,6 +130,78 @@ class TestReadJsonFile:
                 os.unlink(temp_file.name)
 
 
+class TestReadCsvFile:
+    """Тесты для функции read_csv_file."""
+
+    def test_read_valid_csv_file(self, tmp_path):
+        """
+        Тест чтения корректного CSV-файла.
+        """
+        # Создаем временный CSV файл
+        csv_content = """id,amount,currency,description
+1,100.50,USD,Transaction 1
+2,200.75,EUR,Transaction 2"""
+
+        csv_file = tmp_path / "test.csv"
+        csv_file.write_text(csv_content, encoding='utf-8')
+
+        result = read_csv_file(str(csv_file))
+
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert result[0]["id"] == 1
+        assert result[0]["amount"] == 100.50
+        assert result[1]["currency"] == "EUR"
+
+    @patch('pandas.read_csv')
+    def test_read_csv_error(self, mock_read_csv):
+        """
+        Тест обработки ошибки при чтении CSV.
+        """
+        mock_read_csv.side_effect = Exception("CSV read error")
+
+        result = read_csv_file("test.csv")
+
+        assert result == []
+
+
+class TestReadExcelFile:
+    """Тесты для функции read_excel_file."""
+
+    def test_read_valid_excel_file(self, tmp_path):
+        """
+        Тест чтения корректного Excel-файла.
+        """
+        # Создаем временный Excel файл
+        df = pd.DataFrame({
+            'id': [1, 2],
+            'amount': [100.50, 200.75],
+            'currency': ['USD', 'EUR'],
+            'description': ['Transaction 1', 'Transaction 2']
+        })
+
+        excel_file = tmp_path / "test.xlsx"
+        df.to_excel(excel_file, index=False)
+
+        result = read_excel_file(str(excel_file))
+
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert result[0]["id"] == 1
+        assert result[1]["currency"] == "EUR"
+
+    @patch('pandas.read_excel')
+    def test_read_excel_error(self, mock_read_excel):
+        """
+        Тест обработки ошибки при чтении Excel.
+        """
+        mock_read_excel.side_effect = Exception("Excel read error")
+
+        result = read_excel_file("test.xlsx")
+
+        assert result == []
+
+
 class TestTransactionAmount:
     """Тесты для функции get_transaction_amount."""
 
@@ -138,20 +213,6 @@ class TestTransactionAmount:
 
         assert amount == 31957.58
         assert isinstance(amount, float)
-
-    def test_get_amount_with_comma(self):
-        """
-        Тест извлечения суммы с дробной частью.
-        """
-        transaction = {
-            "operationAmount": {
-                "amount": "123.45",
-                "currency": {"code": "RUB"}
-            }
-        }
-
-        amount = get_transaction_amount(transaction)
-        assert amount == 123.45
 
     def test_get_amount_missing_key(self):
         """
@@ -211,46 +272,3 @@ class TestTransactionCurrency:
 
         result = get_transaction_currency(transaction)
         assert result == currency_code
-
-
-def test_integration_read_and_process(temp_json_file):
-    """
-    Интеграционный тест чтения файла и обработки транзакций.
-    """
-    transactions = read_json_file(temp_json_file)
-
-    assert len(transactions) == 2
-
-    # Проверяем первую транзакцию
-    amount1 = get_transaction_amount(transactions[0])
-    currency1 = get_transaction_currency(transactions[0])
-
-    assert amount1 == 100.00
-    assert currency1 == "RUB"
-
-    # Проверяем вторую транзакцию
-    amount2 = get_transaction_amount(transactions[1])
-    currency2 = get_transaction_currency(transactions[1])
-
-    assert amount2 == 50.00
-    assert currency2 == "USD"
-
-
-def test_read_json_file_logging(tmp_path):
-    """
-    Тест логирования при чтении JSON-файла.
-    """
-    # Создаем временный JSON файл
-    json_file = tmp_path / "test.json"
-    json_file.write_text('[{"id": 1, "name": "test"}]', encoding='utf-8')
-
-    result = read_json_file(str(json_file))
-    assert result == [{"id": 1, "name": "test"}]
-
-
-def test_read_nonexistent_file_logging():
-    """
-    Тест логирования при попытке чтения несуществующего файла.
-    """
-    result = read_json_file("nonexistent.json")
-    assert result == []

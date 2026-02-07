@@ -1,15 +1,15 @@
 """
-Модуль для работы с файлами операций над банковскими картами.
-Предоставляет функции для чтения Json-файлов с транзакциями.
+Модуль утилит для работы с файлами различных форматов.
+Предоставляет функции для чтения JSON, CSV, Excel файлов и обработки транзакций.
 """
 
 import json
 import os
-from typing import Any, Dict, List
+import pandas as pd
+from typing import List, Dict, Any, Union, Optional
+from pathlib import Path
+from .logging_config import get_utils_logger
 
-from src.logging_config import get_utils_logger
-
-# Create logger for module utils
 logger = get_utils_logger()
 
 
@@ -17,9 +17,10 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
     """
     Читает Json-файл и возвращает список словарей с данными о транзакциях.
 
-    :param
+    Args:
         file_path: Путь к JSON-файлу
-    :return:
+
+    Returns:
         Список словарей с данными о транзакциях.
         Если файл не найден, пустой или содержит не список, то возвращает пустой список.
     """
@@ -55,17 +56,60 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
         return []
 
 
+def read_csv_file(file_path: str) -> List[Dict[str, Any]]:
+    """
+    Читает CSV-файл и возвращает список словарей с данными о транзакциях.
+
+    Args:
+        file_path: Путь к CSV-файлу
+
+    Returns:
+        Список словарей с данными о транзакциях
+    """
+    try:
+        logger.info(f"Попытка чтения CSV-файла: {file_path}")
+        df: pd.DataFrame = pd.read_csv(file_path, encoding='utf-8')
+        transactions: List[Dict[str, Any]] = df.to_dict('records')
+        logger.info(f"Успешное чтение CSV-файла: {file_path}. Загружено {len(transactions)} записей.")
+        return transactions
+    except Exception as e:
+        logger.error(f"Ошибка чтения CSV-файла {file_path}: {e}")
+        return []
+
+
+def read_excel_file(file_path: str, sheet_name: Union[str, int] = 0) -> List[Dict[str, Any]]:
+    """
+    Читает Excel-файл и возвращает список словарей с данными о транзакциях.
+
+    Args:
+        file_path: Путь к Excel-файлу
+        sheet_name: Название листа или его индекс (по умолчанию 0)
+
+    Returns:
+        Список словарей с данными о транзакций
+    """
+    try:
+        logger.info(f"Попытка чтения Excel-файла: {file_path}")
+        df: pd.DataFrame = pd.read_excel(file_path, sheet_name=sheet_name)
+        transactions: List[Dict[str, Any]] = df.to_dict('records')
+        logger.info(f"Успешное чтение Excel-файла: {file_path}. Загружено {len(transactions)} записей.")
+        return transactions
+    except Exception as e:
+        logger.error(f"Ошибка чтения Excel-файла {file_path}: {e}")
+        return []
+
+
 def get_transaction_amount(transaction: Dict[str, Any]) -> float:
     """
     Извлекает сумму транзакции из словаря транзакции.
 
-    Аргументы:
+    Args:
         transaction: Словарь с данными о транзакции
 
-    Возвращает:
+    Returns:
         Сумма транзакции как float
 
-    Исключения:
+    Raises:
         KeyError: Если ключи 'operationAmount' или 'amount' отсутствуют
         ValueError: Если сумму невозможно преобразовать в float
     """
@@ -93,13 +137,13 @@ def get_transaction_currency(transaction: Dict[str, Any]) -> str:
     """
     Извлекает валюту транзакции из словаря транзакции.
 
-    Аргументы:
+    Args:
         transaction: Словарь с данными о транзакции
 
-    Возвращает:
+    Returns:
         Код валюты транзакции
 
-    Исключения:
+    Raises:
         KeyError: Если ключи 'operationAmount' или 'currency' отсутствуют
     """
     logger.debug(f"Извлечение валюты для транзакции: {transaction.get('id', 'Unknown')}")
@@ -122,10 +166,10 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
     """
     Проверяет структуру транзакции на наличие обязательных полей.
 
-    Аргументы:
+    Args:
         transaction: Словарь с данными о транзакции
 
-    Возвращает:
+    Returns:
         True если структура корректна, иначе False
     """
     logger.debug(f"Валидация структуры транзакции: {transaction.get('id', 'Unknown')}")
@@ -162,3 +206,27 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
         error_msg = f"Ошибка при валидации структуры транзакции: {e}"
         logger.error(error_msg)
         return False
+
+
+def load_transactions_from_file(file_path: str) -> List[Dict[str, Any]]:
+    """
+    Универсальная функция для загрузки транзакций из файла любого поддерживаемого формата.
+
+    Args:
+        file_path: Путь к файлу с транзакциями
+
+    Returns:
+        Список транзакций или пустой список в случае ошибки
+    """
+    path = Path(file_path)
+    suffix = path.suffix.lower()
+
+    if suffix == '.json':
+        return read_json_file(file_path)
+    elif suffix == '.csv':
+        return read_csv_file(file_path)
+    elif suffix in ['.xlsx', '.xls']:
+        return read_excel_file(file_path)
+    else:
+        logger.error(f"Неподдерживаемый формат файла: {suffix}")
+        return []

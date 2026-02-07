@@ -4,17 +4,17 @@
 """
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import requests
 from dotenv import load_dotenv
 
-from src.logging_config import get_currency_converter_logger
+from .logging_config import get_external_api_logger
 
 # Загружаем переменные окружения из .env файла
 load_dotenv()
 
-logger = get_currency_converter_logger()
+logger = get_external_api_logger()
 
 
 class CurrencyConverter:
@@ -38,14 +38,14 @@ class CurrencyConverter:
         """
         Получает текущий курс обмена валюты через API.
 
-        Аргументы:
+        Args:
             from_currency: Исходная валюта (например, "USD", "EUR")
             to_currency: Целевая валюта (по умолчанию "RUB")
 
-        Возвращает:
+        Returns:
             Курс обмена валюты
 
-        Исключения:
+        Raises:
             ValueError: Если API ключ не установлен или произошла ошибка API
             requests.RequestException: Если произошла сетевая ошибка
         """
@@ -69,7 +69,7 @@ class CurrencyConverter:
             response.raise_for_status()
 
             data = response.json()
-            logger.debug(f"Получаем ответ от IP: {data}")
+            logger.debug(f"Получаем ответ от API: {data}")
 
             if not data.get("success", True):
                 error_info = data.get("error", {})
@@ -100,17 +100,17 @@ class CurrencyConverter:
         """
         Конвертирует сумму транзакции в рубли.
 
-        Аргументы:
+        Args:
             transaction: Словарь с данными о транзакции
 
-        Возвращает:
+        Returns:
             Сумму транзакции в рублях как float
 
-        Исключения:
+        Raises:
             KeyError: Если в транзакции отсутствуют необходимые ключи
             ValueError: Если сумма не может быть преобразована или произошла ошибка конвертации
         """
-        from src.utils_file_operations import get_transaction_amount, get_transaction_currency
+        from .utils import get_transaction_amount, get_transaction_currency
 
         try:
             amount = get_transaction_amount(transaction)
@@ -141,16 +141,18 @@ def get_amount_in_rubles(transaction: Dict[str, Any]) -> float:
     """
     Основная функция для получения суммы транзакции в рублях.
 
-    Аргументы:
+    Args:
         transaction: Словарь с данными о транзакции
 
-    Возвращает:
+    Returns:
         Сумму транзакции в рублях как float
 
-   """
+    Raises:
+        ValueError: Если произошла ошибка при обработке транзакции
+    """
     logger.debug(f"Конвертация суммы транзакции в рубли: {transaction.get('id', 'Unknown')}")
 
-    from src.utils_file_operations import get_transaction_amount, get_transaction_currency
+    from .utils import get_transaction_amount, get_transaction_currency
 
     try:
         amount = get_transaction_amount(transaction)

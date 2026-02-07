@@ -64,6 +64,16 @@ lines_after_imports = 2
 disallow_untyped_defs = true
 warn_return_any = true
 exclude = ["venv"]
+warn_unused_configs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
 
 # Добавьте эту секцию для ковеража
 [tool.coverage.run]
@@ -98,3 +108,11 @@ title = "Coverage Report - Homework 4"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.mypy.overrides]]
+module = [
+    "pandas.*",
+    "numpy.*",
+    "openpyxl.*"
+]
+ignore_missing_imports = true

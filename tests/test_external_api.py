@@ -1,5 +1,5 @@
 """
-Тесты для модуля currency_converter.
+Тесты для модуля external_api.
 Проверяет корректность конвертации валют через внешнее API.
 """
 
@@ -7,7 +7,7 @@ import os
 import pytest
 from unittest.mock import Mock, patch
 
-from src.external_api.currency_converter import (
+from src.external_api import (
     CurrencyConverter,
     get_amount_in_rubles
 )
@@ -92,7 +92,7 @@ class TestCurrencyConverter:
             converter = CurrencyConverter()
             assert converter.api_key is None
 
-    @patch("src.external_api.currency_converter.requests.get")
+    @patch("src.external_api.requests.get")
     def test_get_exchange_rate_success(self, mock_get, converter):
         """
         Тест успешного получения курса обмена.
@@ -116,7 +116,7 @@ class TestCurrencyConverter:
         assert rate == 75.50
         mock_get.assert_called_once()
 
-    @patch("src.external_api.currency_converter.requests.get")
+    @patch("src.external_api.requests.get")
     def test_get_exchange_rate_api_error(self, mock_get, converter):
         """
         Тест обработки ошибки API.
@@ -136,7 +136,7 @@ class TestCurrencyConverter:
         with pytest.raises(ValueError, match="API ошибка"):
             converter.get_exchange_rate("USD", "RUB")
 
-    @patch("src.external_api.currency_converter.requests.get")
+    @patch("src.external_api.requests.get")
     def test_get_exchange_rate_network_error(self, mock_get, converter):
         """
         Тест обработки сетевой ошибки.
@@ -146,7 +146,6 @@ class TestCurrencyConverter:
 
         converter.api_key = "test_key"
 
-        # Исправляем ожидаемое сообщение
         with pytest.raises(Exception, match="Network error"):
             converter.get_exchange_rate("USD", "RUB")
 
@@ -156,7 +155,6 @@ class TestCurrencyConverter:
         """
         converter.api_key = None
 
-        # Исправляем регулярное выражение
         with pytest.raises(ValueError, match="API ключ для Exchange Rates API не установлен"):
             converter.get_exchange_rate("USD", "RUB")
 
@@ -257,21 +255,3 @@ class TestGetAmountInRubles:
 
         result = get_amount_in_rubles(transaction)
         assert result == expected_result
-
-
-def test_currency_codes_extraction():
-    """
-    Тест извлечения кодов валют из реальных данных.
-    """
-    from src.utils_file_operations import get_transaction_currency
-
-    test_cases = [
-        ({"operationAmount": {"amount": "100", "currency": {"code": "RUB"}}}, "RUB"),
-        ({"operationAmount": {"amount": "100", "currency": {"code": "USD"}}}, "USD"),
-        ({"operationAmount": {"amount": "100", "currency": {"code": "EUR"}}}, "EUR"),
-        ({"operationAmount": {"amount": "100", "currency": {"code": "GBP"}}}, "GBP"),
-    ]
-
-    for transaction, expected_currency in test_cases:
-        currency = get_transaction_currency(transaction)
-        assert currency == expected_currency

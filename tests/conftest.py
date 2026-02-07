@@ -42,8 +42,13 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "id": 1,
             "state": "EXECUTED",
             "date": "2024-03-14T10:30:00.000",
-            "amount": "100.00",
-            "currency": "USD",
+            "operationAmount": {
+                "amount": "100.00",
+                "currency": {
+                    "code": "USD",
+                    "name": "USD"
+                }
+            },
             "description": "Transaction 1",
             "from": "Visa 7000792289606361",
             "to": "Счет 64686473678894779589"
@@ -52,8 +57,13 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "id": 2,
             "state": "PENDING",
             "date": "2024-02-01T15:45:30.123",
-            "amount": "200.50",
-            "currency": "EUR",
+            "operationAmount": {
+                "amount": "200.50",
+                "currency": {
+                    "code": "EUR",
+                    "name": "EUR"
+                }
+            },
             "description": "Transaction 2",
             "from": "MasterCard 7158300734726758",
             "to": "Счет 35383033474447895560"
@@ -62,8 +72,13 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "id": 3,
             "state": "EXECUTED",
             "date": "2023-12-25T08:00:00.000",
-            "amount": "50.75",
-            "currency": "RUB",
+            "operationAmount": {
+                "amount": "50.75",
+                "currency": {
+                    "code": "RUB",
+                    "name": "руб."
+                }
+            },
             "description": "Transaction 3",
             "from": "Maestro 6831982476737658",
             "to": "Счет 73654108430135874305"
@@ -72,16 +87,26 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "id": 4,
             "state": "CANCELED",
             "date": "2023-11-10T12:00:00.000",
-            "amount": "300.00",
-            "currency": "USD",
+            "operationAmount": {
+                "amount": "300.00",
+                "currency": {
+                    "code": "USD",
+                    "name": "USD"
+                }
+            },
             "description": "Transaction 4",
         },
         {
             "id": 5,
             "state": "EXECUTED",
             "date": "2023-10-05T09:15:45.000",
-            "amount": "150.25",
-            "currency": "EUR",
+            "operationAmount": {
+                "amount": "150.25",
+                "currency": {
+                    "code": "EUR",
+                    "name": "EUR"
+                }
+            },
             "description": "Transaction 5",
         }
     ]

@@ -106,7 +106,7 @@ class TestFilterByCurrency:
         for transaction in rub_transactions:
             assert transaction["operationAmount"]["currency"]["code"] == "RUB"
 
-    @pytest.mark.parametrize("currency_code,expected_count", [
+    @pytest.mark.parametrize("currency_code, expected_count", [
         ("USD", 3),  # Должно найти 3 транзакции в USD
         ("RUB", 2),  # Должно найти 2 транзакции в RUB
         ("EUR", 0),  # Не должно найти транзакций в EUR
@@ -136,7 +136,7 @@ class TestTransactionDescriptions:
 class TestCardNumberGenerator:
     """Тесты для функции card_number_generator."""
 
-    @pytest.mark.parametrize("start,stop,expected_output", [
+    @pytest.mark.parametrize("start, stop, expected_output", [
         (1, 5, [
             "0000 0000 0000 0001",
             "0000 0000 0000 0002",
