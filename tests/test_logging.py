@@ -6,7 +6,6 @@ import os
 import logging
 import pytest
 from src.logging_config import setup_logger, get_utils_logger, get_masks_logger
-from src.utils import read_json_file
 from src.masks import get_mask_card_number, get_mask_account
 
 
