@@ -133,16 +133,16 @@ class TestReadJsonFile:
 class TestReadCsvFile:
     """Тесты для функции read_csv_file."""
 
-    def test_read_valid_csv_file(self, tmp_path):
+    def test_read_valid_csv_file_with_semicolon(self, tmp_path):
         """
-        Тест чтения корректного CSV-файла.
+        Тест чтения корректного CSV-файла с разделителем ';'.
         """
-        # Создаем временный CSV файл
-        csv_content = """id,amount,currency,description
-1,100.50,USD,Transaction 1
-2,200.75,EUR,Transaction 2"""
+        # Создаем временный CSV файл с разделителем ;
+        csv_content = """id;amount;currency;description
+1;100.50;USD;Transaction 1
+2;200.75;EUR;Transaction 2"""
 
-        csv_file = tmp_path / "test.csv"
+        csv_file = tmp_path / "test_semicolon.csv"
         csv_file.write_text(csv_content, encoding='utf-8')
 
         result = read_csv_file(str(csv_file))
@@ -152,6 +152,25 @@ class TestReadCsvFile:
         assert result[0]["id"] == 1
         assert result[0]["amount"] == 100.50
         assert result[1]["currency"] == "EUR"
+        assert result[1]["description"] == "Transaction 2"
+
+    def test_read_csv_file_with_comma_fails(self, tmp_path):
+        """
+        Тест показывает, что CSV с запятой не читается (ожидаемо).
+        """
+        # Создаем временный CSV файл с разделителем ,
+        csv_content = """id,amount,currency,description
+1,100.50,USD,Transaction 1
+2,200.75,EUR,Transaction 2"""
+
+        csv_file = tmp_path / "test_comma.csv"
+        csv_file.write_text(csv_content, encoding='utf-8')
+
+        result = read_csv_file(str(csv_file))
+
+        # pandas прочитает как один столбец из-за неправильного разделителя
+        # Проверяем, что результат не содержит ожидаемых данных
+        assert len(result) == 0 or len(result[0]) == 1
 
     @patch('pandas.read_csv')
     def test_read_csv_error(self, mock_read_csv):

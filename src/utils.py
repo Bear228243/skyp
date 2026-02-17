@@ -1,293 +1,232 @@
 """
-Тесты для модуля utils.
-Проверяет корректность чтения файлов и обработки транзакций.
+Модуль утилит для работы с файлами различных форматов.
+Предоставляет функции для чтения JSON, CSV, Excel файлов и обработки транзакций.
 """
 
 import json
 import os
-import tempfile
-import pytest
 import pandas as pd
-from unittest.mock import mock_open, patch
+from typing import List, Dict, Any, Union, Optional
+from pathlib import Path
+from .logging_config import get_utils_logger
 
-from src.utils import (
-    read_json_file,
-    read_csv_file,
-    read_excel_file,
-    get_transaction_amount,
-    get_transaction_currency
-)
+logger = get_utils_logger()
 
 
-@pytest.fixture
-def sample_transaction():
+def read_json_file(file_path: str) -> List[Dict[str, Any]]:
     """
-    Фикстура предоставляет пример корректной транзакции.
+    Читает Json-файл и возвращает список словарей с данными о транзакциях.
+
+    Args:
+        file_path: Путь к JSON-файлу
+
+    Returns:
+        Список словарей с данными о транзакциях.
+        Если файл не найден, пустой или содержит не список, то возвращает пустой список.
     """
-    return {
-        "id": 441945886,
-        "state": "EXECUTED",
-        "date": "2019-08-26T10:50:58.294041",
-        "operationAmount": {
-            "amount": "31957.58",
-            "currency": {
-                "name": "руб.",
-                "code": "RUB"
-            }
-        },
-        "description": "Перевод организации",
-        "from": "Maestro 1596837868705199",
-        "to": "Счет 64686473678894779589"
-    }
+    logger.info(f"Попытка чтения JSON-файла:{file_path}")
+
+    # Проверяем существует ли файл
+    if not os.path.exists(file_path):
+        error_msg = f"Файл {file_path} не найден"
+        logger.error(error_msg)
+        return []
+
+    try:
+        # Открываем и читаем файл
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+
+        # Проверяем, что данные являются списком
+        if not isinstance(data, list):
+            error_msg = f"Файл {file_path} не является списком"
+            logger.error(error_msg)
+            return []
+
+        logger.info(f"Успешное чтение JSON-файла:{file_path}. Загружено {len(data)} записей.")
+        return data
+
+    except json.JSONDecodeError as e:
+        error_msg = f"Ошибка декодирования JSON в файле {file_path}: {e}"
+        logger.error(error_msg)
+        return []
+    except Exception as e:
+        error_msg = f"Неожиданная ошибка при чтении файла {file_path}: {e}"
+        logger.error(error_msg)
+        return []
 
 
-@pytest.fixture
-def temp_json_file():
+def read_csv_file(file_path: str) -> List[Dict[str, Any]]:
     """
-    Фикстура создает временный JSON-файл для тестирования.
+    Читает CSV-файл и возвращает список словарей с данными о транзакциях.
+
+    Args:
+        file_path: Путь к CSV-файлу
+
+    Returns:
+        Список словарей с данными о транзакциях
     """
-    # Создаем временный файл с корректными данными
-    temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
-    test_data = [
-        {
-            "id": 1,
-            "operationAmount": {
-                "amount": "100.00",
-                "currency": {"code": "RUB"}
-            }
-        },
-        {
-            "id": 2,
-            "operationAmount": {
-                "amount": "50.00",
-                "currency": {"code": "USD"}
-            }
-        }
-    ]
-    json.dump(test_data, temp_file)
-    temp_file.close()
-
-    yield temp_file.name
-
-    # Удаляем временный файл после теста
-    if os.path.exists(temp_file.name):
-        os.unlink(temp_file.name)
+    try:
+        logger.info(f"Попытка чтения CSV-файла: {file_path}")
+        df: pd.DataFrame = pd.read_csv(file_path, encoding='utf-8', delimiter=';')
+        transactions: List[Dict[str, Any]] = df.to_dict('records')
+        logger.info(f"Успешное чтение CSV-файла: {file_path}. Загружено {len(transactions)} записей.")
+        return transactions
+    except Exception as e:
+        logger.error(f"Ошибка чтения CSV-файла {file_path}: {e}")
+        return []
 
 
-class TestReadJsonFile:
-    """Тесты для функции read_json_file."""
+def read_excel_file(file_path: str, sheet_name: Union[str, int] = 0) -> List[Dict[str, Any]]:
+    """
+    Читает Excel-файл и возвращает список словарей с данными о транзакциях.
 
-    def test_read_valid_json_file(self, temp_json_file):
-        """
-        Тест чтения корректного JSON-файла.
-        """
-        result = read_json_file(temp_json_file)
+    Args:
+        file_path: Путь к Excel-файлу
+        sheet_name: Название листа или его индекс (по умолчанию 0)
 
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert result[0]["id"] == 1
-        assert result[1]["id"] == 2
-
-    def test_read_nonexistent_file(self):
-        """
-        Тест чтения несуществующего файла.
-        """
-        result = read_json_file("nonexistent_file.json")
-
-        assert result == []
-
-    @patch("builtins.open", mock_open(read_data='{"not": "a list"}'))
-    def test_read_json_not_list(self):
-        """
-        Тест чтения JSON-файла, который не содержит список.
-        """
-        result = read_json_file("test.json")
-
-        assert result == []
-
-    @patch("builtins.open", mock_open(read_data='invalid json'))
-    def test_read_invalid_json(self):
-        """
-        Тест чтения файла с некорректным JSON.
-        """
-        result = read_json_file("test.json")
-
-        assert result == []
-
-    def test_read_empty_file(self):
-        """
-        Тест чтения пустого файла.
-        """
-        # Создаем временный пустой файл
-        temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
-        temp_file.close()
-
-        try:
-            result = read_json_file(temp_file.name)
-            assert result == []
-        finally:
-            if os.path.exists(temp_file.name):
-                os.unlink(temp_file.name)
+    Returns:
+        Список словарей с данными о транзакций
+    """
+    try:
+        logger.info(f"Попытка чтения Excel-файла: {file_path}")
+        df: pd.DataFrame = pd.read_excel(file_path, sheet_name=sheet_name)
+        transactions: List[Dict[str, Any]] = df.to_dict('records')
+        logger.info(f"Успешное чтение Excel-файла: {file_path}. Загружено {len(transactions)} записей.")
+        return transactions
+    except Exception as e:
+        logger.error(f"Ошибка чтения Excel-файла {file_path}: {e}")
+        return []
 
 
-class TestReadCsvFile:
-    """Тесты для функции read_csv_file."""
+def get_transaction_amount(transaction: Dict[str, Any]) -> float:
+    """
+    Извлекает сумму транзакции из словаря транзакции.
 
-    def test_read_valid_csv_file_with_semicolon(self, tmp_path):
-        """
-        Тест чтения корректного CSV-файла с разделителем ';'.
-        """
-        # Создаем временный CSV файл с разделителем ;
-        csv_content = """id;amount;currency;description
-1;100.50;USD;Transaction 1
-2;200.75;EUR;Transaction 2"""
+    Args:
+        transaction: Словарь с данными о транзакции
 
-        csv_file = tmp_path / "test_semicolon.csv"
-        csv_file.write_text(csv_content, encoding='utf-8')
+    Returns:
+        Сумма транзакции как float
 
-        result = read_csv_file(str(csv_file))
+    Raises:
+        KeyError: Если ключи 'operationAmount' или 'amount' отсутствуют
+        ValueError: Если сумму невозможно преобразовать в float
+    """
+    logger.debug(f"Извлечение суммы для транзакции: {transaction.get('id', 'Unknown')}")
 
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert result[0]["id"] == 1
-        assert result[0]["amount"] == 100.50
-        assert result[1]["currency"] == "EUR"
-        assert result[1]["description"] == "Transaction 2"
+    try:
+        operation_amount = transaction['operationAmount']
+        amount_str = operation_amount['amount']
 
-    def test_read_csv_file_with_comma_fails(self, tmp_path):
-        """
-        Тест показывает, что CSV с запятой не читается (ожидаемо).
-        """
-        # Создаем временный CSV файл с разделителем ,
-        csv_content = """id,amount,currency,description
-1,100.50,USD,Transaction 1
-2,200.75,EUR,Transaction 2"""
+        amount = float(amount_str)
+        logger.debug(f"Успешно извлечена сумма: {amount} для транзакции {transaction.get('id', 'Unknown')}")
+        return amount
 
-        csv_file = tmp_path / "test_comma.csv"
-        csv_file.write_text(csv_content, encoding='utf-8')
-
-        result = read_csv_file(str(csv_file))
-
-        # pandas прочитает как один столбец из-за неправильного разделителя
-        # Проверяем, что результат не содержит ожидаемых данных
-        assert len(result) == 0 or len(result[0]) == 1
-
-    @patch('pandas.read_csv')
-    def test_read_csv_error(self, mock_read_csv):
-        """
-        Тест обработки ошибки при чтении CSV.
-        """
-        mock_read_csv.side_effect = Exception("CSV read error")
-
-        result = read_csv_file("test.csv")
-
-        assert result == []
+    except KeyError as e:
+        error_msg = f"Отсутствует обязательный ключ в транзакции {transaction.get('id', 'Unknown')}: {e}"
+        logger.error(error_msg)
+        raise KeyError(error_msg)
+    except ValueError as e:
+        error_msg = f"Невозможно преобразовать сумму '{amount_str}' в float для транзакции {transaction.get('id', 'Unknown')}: {e}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
 
 
-class TestReadExcelFile:
-    """Тесты для функции read_excel_file."""
+def get_transaction_currency(transaction: Dict[str, Any]) -> str:
+    """
+    Извлекает валюту транзакции из словаря транзакции.
 
-    def test_read_valid_excel_file(self, tmp_path):
-        """
-        Тест чтения корректного Excel-файла.
-        """
-        # Создаем временный Excel файл
-        df = pd.DataFrame({
-            'id': [1, 2],
-            'amount': [100.50, 200.75],
-            'currency': ['USD', 'EUR'],
-            'description': ['Transaction 1', 'Transaction 2']
-        })
+    Args:
+        transaction: Словарь с данными о транзакции
 
-        excel_file = tmp_path / "test.xlsx"
-        df.to_excel(excel_file, index=False)
+    Returns:
+        Код валюты транзакции
 
-        result = read_excel_file(str(excel_file))
+    Raises:
+        KeyError: Если ключи 'operationAmount' или 'currency' отсутствуют
+    """
+    logger.debug(f"Извлечение валюты для транзакции: {transaction.get('id', 'Unknown')}")
 
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert result[0]["id"] == 1
-        assert result[1]["currency"] == "EUR"
+    try:
+        operation_amount = transaction['operationAmount']
+        currency_info = operation_amount['currency']
+        currency_code = currency_info['code']
 
-    @patch('pandas.read_excel')
-    def test_read_excel_error(self, mock_read_excel):
-        """
-        Тест обработки ошибки при чтении Excel.
-        """
-        mock_read_excel.side_effect = Exception("Excel read error")
+        logger.debug(f"Успешно извлечена валюта: {currency_code} для транзакции {transaction.get('id', 'Unknown')}")
+        return currency_code
 
-        result = read_excel_file("test.xlsx")
-
-        assert result == []
+    except KeyError as e:
+        error_msg = f"Отсутствует обязательный ключ в транзакции {transaction.get('id', 'Unknown')}: {e}"
+        logger.error(error_msg)
+        raise KeyError(error_msg)
 
 
-class TestTransactionAmount:
-    """Тесты для функции get_transaction_amount."""
+def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
+    """
+    Проверяет структуру транзакции на наличие обязательных полей.
 
-    def test_get_valid_amount(self, sample_transaction):
-        """
-        Тест извлечения корректной суммы из транзакции.
-        """
-        amount = get_transaction_amount(sample_transaction)
+    Args:
+        transaction: Словарь с данными о транзакции
 
-        assert amount == 31957.58
-        assert isinstance(amount, float)
+    Returns:
+        True если структура корректна, иначе False
+    """
+    logger.debug(f"Валидация структуры транзакции: {transaction.get('id', 'Unknown')}")
 
-    def test_get_amount_missing_key(self):
-        """
-        Тест извлечения суммы при отсутствии обязательных ключей.
-        """
-        transaction = {"id": 1}  # Нет operationAmount
+    required_fields = ["id", "operationAmount"]
+    operation_amount_fields = ["amount", "currency"]
+    currency_fields = ["code"]
 
-        with pytest.raises(KeyError):
-            get_transaction_amount(transaction)
+    try:
+        # Проверяем основные поля
+        for field in required_fields:
+            if field not in transaction:
+                logger.warning(f"Отсутствует обязательное поле '{field}' в транзакции")
+                return False
 
-    def test_get_amount_invalid_format(self):
-        """
-        Тест извлечения суммы в некорректном формате.
-        """
-        transaction = {
-            "operationAmount": {
-                "amount": "not_a_number",
-                "currency": {"code": "RUB"}
-            }
-        }
+        # Проверяем поля operationAmount
+        operation_amount = transaction["operationAmount"]
+        for field in operation_amount_fields:
+            if field not in operation_amount:
+                logger.warning(f"Отсутствует поле '{field}' в operationAmount транзакции {transaction['id']}")
+                return False
 
-        with pytest.raises(ValueError):
-            get_transaction_amount(transaction)
+        # Проверяем поля currency
+        currency = operation_amount["currency"]
+        for field in currency_fields:
+            if field not in currency:
+                logger.warning(f"Отсутствует поле '{field}' в currency транзакции {transaction['id']}")
+                return False
+
+        logger.debug(f"Структура транзакции {transaction['id']} прошла валидацию")
+        return True
+
+    except Exception as e:
+        error_msg = f"Ошибка при валидации структуры транзакции: {e}"
+        logger.error(error_msg)
+        return False
 
 
-class TestTransactionCurrency:
-    """Тесты для функции get_transaction_currency."""
+def load_transactions_from_file(file_path: str) -> List[Dict[str, Any]]:
+    """
+    Универсальная функция для загрузки транзакций из файла любого поддерживаемого формата.
 
-    def test_get_valid_currency(self, sample_transaction):
-        """
-        Тест извлечения корректного кода валюты.
-        """
-        currency = get_transaction_currency(sample_transaction)
+    Args:
+        file_path: Путь к файлу с транзакциями
 
-        assert currency == "RUB"
+    Returns:
+        Список транзакций или пустой список в случае ошибки
+    """
+    path = Path(file_path)
+    suffix = path.suffix.lower()
 
-    def test_get_currency_missing_key(self):
-        """
-        Тест извлечения валюты при отсутствии обязательных ключей.
-        """
-        transaction = {"id": 1}  # Нет operationAmount
-
-        with pytest.raises(KeyError):
-            get_transaction_currency(transaction)
-
-    @pytest.mark.parametrize("currency_code", ["USD", "EUR", "GBP", "JPY"])
-    def test_get_different_currencies(self, currency_code):
-        """
-        Параметризованный тест для различных кодов валют.
-        """
-        transaction = {
-            "operationAmount": {
-                "amount": "100.00",
-                "currency": {"code": currency_code}
-            }
-        }
-
-        result = get_transaction_currency(transaction)
-        assert result == currency_code
+    if suffix == '.json':
+        return read_json_file(file_path)
+    elif suffix == '.csv':
+        return read_csv_file(file_path)
+    elif suffix in ['.xlsx', '.xls']:
+        return read_excel_file(file_path)
+    else:
+        logger.error(f"Неподдерживаемый формат файла: {suffix}")
+        return []

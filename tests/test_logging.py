@@ -96,27 +96,62 @@ class TestMasksLogging:
         assert logger.name == "masks"
         assert logger.level == logging.DEBUG
 
-    def test_card_masking_logging(self):
+    def test_card_masking_logging_success(self):
         """
-        Тест логирования при маскировании карт.
+        Тест успешного логирования при маскировании карты.
         """
-        card_number = "1234567812345678"
+        card_number = "7000792289606361"  # Корректный номер карты
         masked = get_mask_card_number(card_number)
 
-        assert masked == "1234 56** **** 5678"
+        assert masked == "7000 79** **** 6361"
 
-    def test_account_masking_logging(self):
+    def test_card_masking_logging_error(self):
         """
-        Тест логирования при маскировании счетов.
-        """
-        account_number = "12345678901234567890"
-        masked = get_mask_account(account_number)
-
-        assert masked == "**7890"
-
-    def test_masking_error_logging(self):
-        """
-        Тест логирования ошибок при маскировании.
+        Тест логирования ошибки при маскировании карты.
         """
         with pytest.raises(ValueError):
             get_mask_card_number("invalid_card_number")
+
+    def test_account_masking_logging_success(self):
+        """
+        Тест успешного логирования при маскировании счета.
+        """
+        account_number = "64686473678894779589"  # Корректный номер счета
+        masked = get_mask_account(account_number)
+
+        assert masked == "**9589"
+
+    def test_account_masking_logging_error(self):
+        """
+        Тест логирования ошибки при маскировании счета.
+        """
+        with pytest.raises(ValueError):
+            get_mask_account("123")  # Слишком короткий номер
+
+
+def test_log_directory_creation():
+    """
+    Тест автоматического создания папки logs.
+    """
+    # Закрываем все логгеры перед удалением папки
+    for name in list(logging.Logger.manager.loggerDict.keys()):
+        logger = logging.getLogger(name)
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
+
+    # Удаляем папку logs если существует
+    if os.path.exists("logs"):
+        import shutil
+        try:
+            shutil.rmtree("logs")
+        except PermissionError:
+            # Если не можем удалить, просто пропускаем
+            return
+
+    # Создаем логер - должен создать папку logs
+    logger = setup_logger("test_dir_creation", "test_dir.log")
+    logger.info("Тест создания директории")
+
+    assert os.path.exists("logs")
+    assert os.path.isdir("logs")
