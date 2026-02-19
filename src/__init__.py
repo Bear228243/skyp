@@ -9,5 +9,6 @@ __all__ = [
     'decorators',
     'utils',
     'external_api',
-    'logging_config'
+    'logging_config',
+    'search'
 ]
