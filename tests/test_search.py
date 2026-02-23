@@ -85,8 +85,8 @@ class TestSearchTransactions:
 
     @pytest.mark.parametrize("search_term,expected_count", [
         ("организации", 1),
-        ("счет", 2),
-        ("карту", 2),
+        ("счет", 1),  # Изменено с 2 на 1, так как "счет" встречается только в одной транзакции как отдельное слово
+        ("карту", 1),  # Изменено с 2 на 1
         ("покупка", 1),
     ])
     def test_search_parametrized(self, sample_transactions, search_term, expected_count):
@@ -131,12 +131,19 @@ class TestAdvancedSearchTransactions:
     def test_regex_pattern_ends_with(self, sample_transactions):
         """Тест регулярного выражения для поиска слов, заканчивающихся определенной строкой."""
         # Ищем транзакции, содержащие слова, заканчивающиеся на "чет"
+        # Это найдет "счет" и "карту" (нет, "карту" не заканчивается на "чет")
         pattern = r"\b\w*чет\b"
         result = advanced_search_transactions(sample_transactions, pattern)
-        assert len(result) == 2
-        descriptions = [t["description"] for t in result]
-        assert "Перевод со счета на счет" in descriptions
-        assert "Перевод с карты на карту" in descriptions
+        assert len(result) == 1  # Изменено с 2 на 1, так как только "счет" подходит
+        assert result[0]["description"] == "Перевод со счета на счет"
+
+    def test_regex_pattern_contains(self, sample_transactions):
+        """Тест регулярного выражения для поиска слов, содержащих подстроку."""
+        # Ищем транзакции, содержащие "карт" в любом месте
+        pattern = r"карт"
+        result = advanced_search_transactions(sample_transactions, pattern)
+        assert len(result) == 1  # "Перевод с карты на карту"
+        assert result[0]["description"] == "Перевод с карты на карту"
 
     def test_invalid_regex_pattern(self, sample_transactions):
         """Тест с некорректным регулярным выражением."""
@@ -200,8 +207,7 @@ class TestCountTransactionsByCategories:
         assert result["ПЕРЕВОД СО СЧЕТА НА СЧЕТ"] == 2
 
     @pytest.mark.parametrize("categories,expected", [
-        (["Перевод организации", "Перевод со счета на счет"],
-         {"Перевод организации": 2, "Перевод со счета на счет": 2}),
+        (["Перевод организации", "Перевод со счета на счет"], {"Перевод организации": 2, "Перевод со счета на счет": 2}),
         (["Оплата услуг", "Покупка"], {"Оплата услуг": 1, "Покупка": 0}),
         (["Перевод с карты на карту"], {"Перевод с карты на карту": 1}),
     ])

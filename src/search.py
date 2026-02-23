@@ -15,6 +15,7 @@ def search_transactions(transactions: List[Dict[str, Any]], search_string: str) 
     Ищет транзакции, в описании которых содержится заданная строка.
 
     Использует регулярные выражения для поиска (регистронезависимый поиск).
+    Ищет вхождение строки как отдельного слова или части слова.
 
     Args:
         transactions: Список словарей с транзакциями
@@ -29,6 +30,7 @@ def search_transactions(transactions: List[Dict[str, Any]], search_string: str) 
 
     try:
         # Создаем регулярное выражение с флагом регистронезависимости
+        # Ищем как отдельное слово, так и часть слова
         pattern = re.compile(re.escape(search_string), re.IGNORECASE)
 
         result = []
@@ -61,18 +63,19 @@ def count_transactions_by_categories(transactions: List[Dict[str, Any]], categor
         return {category: 0 for category in categories}
 
     try:
-        # Собираем все описания транзакций
-        descriptions = []
+        # Создаем счетчик
+        counter = Counter()
+
         for transaction in transactions:
             description = transaction.get("description", "")
-            if description:
-                descriptions.append(description)
+            if not description:
+                continue
 
-        # Подсчитываем количество вхождений каждой категории в описаниях
-        counter = Counter()
-        for description in descriptions:
+            # Проверяем каждую категорию
             for category in categories:
-                if category.lower() in description.lower():
+                # Используем регулярное выражение для поиска точного соответствия
+                # или частичного вхождения (в зависимости от того, что нужно)
+                if re.search(re.escape(category), description, re.IGNORECASE):
                     counter[category] += 1
 
         # Преобразуем в словарь с категориями из входного списка
