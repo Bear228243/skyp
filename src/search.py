@@ -1,126 +1,133 @@
 """
-Модуль для поиска и анализа банковских операций с использованием регулярных выражений.
+Дополнительные тесты для модуля search.
+Проверяет граничные случаи и обработку ошибок.
 """
 
-import re
-from typing import List, Dict, Any
-from collections import Counter
-from .logging_config import get_utils_logger
-
-logger = get_utils_logger()
-
-
-def search_transactions(transactions: List[Dict[str, Any]], search_string: str) -> List[Dict[str, Any]]:
-    """
-    Ищет транзакции, в описании которых содержится заданная строка.
-
-    Использует регулярные выражения для поиска (регистронезависимый поиск).
-    Ищет вхождение строки как отдельного слова или части слова.
-
-    Args:
-        transactions: Список словарей с транзакциями
-        search_string: Строка для поиска в описании
-
-    Returns:
-        Список транзакций, у которых в описании есть искомая строка
-    """
-    if not transactions or not search_string:
-        logger.debug("Пустой список транзакций или строка поиска")
-        return []
-
-    try:
-        # Создаем регулярное выражение с флагом регистронезависимости
-        # Ищем как отдельное слово, так и часть слова
-        pattern = re.compile(re.escape(search_string), re.IGNORECASE)
-
-        result = []
-        for transaction in transactions:
-            description = transaction.get("description", "")
-            if description and pattern.search(description):
-                result.append(transaction)
-
-        logger.info(f"Найдено {len(result)} транзакций по запросу '{search_string}'")
-        return result
-
-    except Exception as e:
-        logger.error(f"Ошибка при поиске транзакций: {e}")
-        return []
+import pytest
+from src.search import (
+    search_transactions,
+    count_transactions_by_categories,
+    advanced_search_transactions
+)
 
 
-def count_transactions_by_categories(transactions: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
-    """
-    Подсчитывает количество транзакций в каждой категории.
+class TestSearchTransactionsEdgeCases:
+    """Тесты граничных случаев для search_transactions."""
 
-    Args:
-        transactions: Список словарей с транзакциями
-        categories: Список категорий для подсчета
+    def test_search_with_none_transactions(self):
+        """Тест с None вместо списка транзакций."""
+        result = search_transactions(None, "тест")  # type: ignore
+        assert result == []
 
-    Returns:
-        Словарь с количеством транзакций в каждой категории
-    """
-    if not transactions or not categories:
-        logger.debug("Пустой список транзакций или категорий")
-        return {category: 0 for category in categories}
+    def test_search_with_none_search_string(self, sample_transactions):
+        """Тест с None вместо строки поиска."""
+        result = search_transactions(sample_transactions, None)  # type: ignore
+        assert result == []
 
-    try:
-        # Создаем счетчик
-        counter = Counter()
+    def test_search_with_missing_description(self):
+        """Тест транзакций без описания."""
+        transactions = [
+            {"id": 1, "amount": "1000"},
+            {"id": 2, "description": "Есть описание", "amount": "2000"}
+        ]
+        result = search_transactions(transactions, "описание")
+        assert len(result) == 1
+        assert result[0]["id"] == 2
 
-        for transaction in transactions:
-            description = transaction.get("description", "")
-            if not description:
-                continue
-
-            # Проверяем каждую категорию
-            for category in categories:
-                # Используем регулярное выражение для поиска точного соответствия
-                # или частичного вхождения (в зависимости от того, что нужно)
-                if re.search(re.escape(category), description, re.IGNORECASE):
-                    counter[category] += 1
-
-        # Преобразуем в словарь с категориями из входного списка
-        result = {category: counter.get(category, 0) for category in categories}
-
-        logger.info(f"Подсчитаны категории: {result}")
-        return result
-
-    except Exception as e:
-        logger.error(f"Ошибка при подсчете категорий: {e}")
-        return {category: 0 for category in categories}
+    def test_search_with_special_characters(self):
+        """Тест поиска со специальными символами."""
+        transactions = [
+            {"id": 1, "description": "Транзакция с $pecial символами"},
+            {"id": 2, "description": "Обычная транзакция"}
+        ]
+        result = search_transactions(transactions, "$pecial")
+        assert len(result) == 1
+        assert result[0]["id"] == 1
 
 
-def advanced_search_transactions(transactions: List[Dict[str, Any]], pattern: str) -> List[Dict[str, Any]]:
-    """
-    Расширенный поиск транзакций с использованием регулярных выражений.
+class TestAdvancedSearchTransactionsEdgeCases:
+    """Тесты граничных случаев для advanced_search_transactions."""
 
-    Позволяет использовать сложные шаблоны регулярных выражений.
+    def test_advanced_search_with_empty_pattern(self, sample_transactions):
+        """Тест с пустым шаблоном."""
+        result = advanced_search_transactions(sample_transactions, "")
+        assert result == []
 
-    Args:
-        transactions: Список словарей с транзакциями
-        pattern: Регулярное выражение для поиска
+    def test_advanced_search_with_invalid_regex(self, sample_transactions):
+        """Тест с некорректным регулярным выражением."""
+        result = advanced_search_transactions(sample_transactions, "[")
+        assert result == []
 
-    Returns:
-        Список транзакций, соответствующих шаблону
-    """
-    if not transactions or not pattern:
-        return []
+    def test_advanced_search_with_complex_regex(self):
+        """Тест со сложным регулярным выражением."""
+        transactions = [
+            {"id": 1, "description": "Тест 123"},
+            {"id": 2, "description": "Пример ABC"},
+            {"id": 3, "description": "Другой тест 456"}
+        ]
+        # Ищем цифры
+        result = advanced_search_transactions(transactions, r"\d+")
+        assert len(result) == 2
+        assert result[0]["id"] == 1
+        assert result[1]["id"] == 3
 
-    try:
-        # Компилируем регулярное выражение (регистронезависимый режим)
-        regex = re.compile(pattern, re.IGNORECASE)
+    def test_advanced_search_with_unicode(self):
+        """Тест с юникод символами."""
+        transactions = [
+            {"id": 1, "description": "Кириллица"},
+            {"id": 2, "description": "English"}
+        ]
+        result = advanced_search_transactions(transactions, r"Кириллица")
+        assert len(result) == 1
+        assert result[0]["id"] == 1
 
-        result = []
-        for transaction in transactions:
-            description = transaction.get("description", "")
-            if description and regex.search(description):
-                result.append(transaction)
 
-        logger.info(f"Расширенный поиск по шаблону '{pattern}' нашел {len(result)} транзакций")
-        return result
+class TestCountTransactionsByCategoriesEdgeCases:
+    """Тесты граничных случаев для count_transactions_by_categories."""
 
-    except re.error as e:
-        logger.error(f"Ошибка в регулярном выражении '{pattern}': {e}")
-        return []
-    except Exception as e:
-        logger.error(f"Ошибка при расширенном поиске: {e}")
-        return []
+    def test_count_with_none_transactions(self):
+        """Тест с None вместо списка транзакций."""
+        categories = ["Категория 1", "Категория 2"]
+        result = count_transactions_by_categories(None, categories)  # type: ignore
+        assert result == {"Категория 1": 0, "Категория 2": 0}
+
+    def test_count_with_none_categories(self, sample_transactions):
+        """Тест с None вместо списка категорий."""
+        result = count_transactions_by_categories(sample_transactions, None)  # type: ignore
+        assert result == {}
+
+    def test_count_with_duplicate_categories(self, sample_transactions):
+        """Тест с дублирующимися категориями в списке."""
+        categories = ["Перевод организации", "Перевод организации"]
+        result = count_transactions_by_categories(sample_transactions, categories)
+        # Должен подсчитать отдельно для каждой записи
+        assert result["Перевод организации"] == 2
+
+    def test_count_with_partial_matches(self):
+        """Тест с частичным совпадением категорий."""
+        transactions = [
+            {"id": 1, "description": "Перевод организации"},
+            {"id": 2, "description": "Перевод со счета на счет"},
+            {"id": 3, "description": "Перевод с карты на карту"}
+        ]
+        categories = ["Перевод"]  # Должно совпасть со всеми
+        result = count_transactions_by_categories(transactions, categories)
+        assert result["Перевод"] == 3
+
+    def test_count_with_empty_descriptions(self):
+        """Тест с пустыми описаниями."""
+        transactions = [
+            {"id": 1, "description": ""},
+            {"id": 2, "description": None},
+            {"id": 3}  # Без поля description
+        ]
+        categories = ["Тест"]
+        result = count_transactions_by_categories(transactions, categories)
+        assert result["Тест"] == 0
+
+    def test_count_logging_error(self, caplog):
+        """Тест логирования ошибки."""
+        with caplog.at_level('ERROR'):
+            # Передаем некорректные данные, чтобы вызвать ошибку
+            result = count_transactions_by_categories("not a list", ["test"])  # type: ignore
+            assert "Ошибка при подсчете категорий" in caplog.text

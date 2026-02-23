@@ -1,87 +1,93 @@
-"""Модуль для обработки и фильтрации транзакций."""
+"""
+Дополнительные тесты для модуля processing.
+Проверяет все функции и граничные случаи.
+"""
 
-from typing import List, Dict, Any
+import pytest
 from datetime import datetime
+from src.processing import (
+    filter_by_state,
+    sort_by_date,
+    get_last_transactions,
+    filter_by_currency_code
+)
 
 
-def filter_by_state(transactions: List[Dict[str, Any]], state: str = "EXECUTED") -> List[Dict[str, Any]]:
-    """
-    Фильтрует транзакции по статусу.
+class TestProcessingAdditional:
+    """Дополнительные тесты для функций processing."""
 
-    Args:
-        transactions: Список транзакций
-        state: Статус для фильтрации (по умолчанию "EXECUTED")
+    def test_filter_by_state_with_missing_state(self, sample_transactions):
+        """Тест фильтрации при отсутствии поля state."""
+        transactions = sample_transactions.copy()
+        transactions.append({"id": 6, "date": "2024-01-01"})  # Без state
 
-    Returns:
-        Отфильтрованный список транзакций
-    """
-    if not transactions:
-        return []
+        result = filter_by_state(transactions, "EXECUTED")
+        assert len(result) == 3  # Должен игнорировать транзакцию без state
 
-    return [transaction for transaction in transactions if transaction.get("state") == state]
+    def test_filter_by_state_case_sensitivity(self, sample_transactions):
+        """Тест чувствительности к регистру."""
+        # Функция должна быть чувствительна к регистру
+        result = filter_by_state(sample_transactions, "executed")
+        assert len(result) == 0  # Должен найти 0, т.к. статус в верхнем регистре
 
+    def test_sort_by_date_with_invalid_dates(self):
+        """Тест сортировки с некорректными датами."""
+        transactions = [
+            {"id": 1, "date": "invalid-date"},
+            {"id": 2, "date": "2024-01-01T10:00:00"},
+            {"id": 3},  # Без даты
+        ]
 
-def sort_by_date(transactions: List[Dict[str, Any]], descending: bool = True) -> List[Dict[str, Any]]:
-    """
-    Сортирует транзакции по дате.
+        result = sort_by_date(transactions, descending=True)
+        # Транзакции с некорректными датами должны быть в конце
+        assert result[0]["id"] == 2  # С корректной датой
+        # Остальные могут быть в любом порядке
 
-    Args:
-        transactions: Список транзакций
-        descending: Сортировка по убыванию (по умолчанию True)
+    def test_sort_by_date_with_timezone(self):
+        """Тест сортировки с датами в разных часовых поясах."""
+        transactions = [
+            {"id": 1, "date": "2024-01-01T10:00:00+03:00"},
+            {"id": 2, "date": "2024-01-01T09:00:00+00:00"},
+        ]
 
-    Returns:
-        Отсортированный список транзакций
-    """
-    if not transactions:
-        return []
+        result = sort_by_date(transactions, descending=True)
+        # Должен корректно обработать временные зоны
 
-    def get_date_key(transaction: Dict[str, Any]) -> datetime:
-        date_str = transaction.get("date", "")
-        try:
-            # Убираем временную зону если есть
-            date_str = date_str.split('.')[0] if '.' in date_str else date_str
-            return datetime.fromisoformat(date_str.replace('Z', ''))
-        except (ValueError, AttributeError):
-            return datetime.min
+    def test_get_last_transactions_with_count_greater_than_list(self, sample_transactions):
+        """Тест получения последних транзакций с count > размера списка."""
+        result = get_last_transactions(sample_transactions, count=10)
+        assert len(result) == 3  # Должен вернуть все выполненные транзакции
 
-    return sorted(transactions, key=get_date_key, reverse=descending)
+    def test_get_last_transactions_with_zero_count(self, sample_transactions):
+        """Тест получения 0 последних транзакций."""
+        result = get_last_transactions(sample_transactions, count=0)
+        assert len(result) == 0
 
+    def test_get_last_transactions_with_no_executed(self):
+        """Тест получения последних транзакций, когда нет выполненных."""
+        transactions = [
+            {"id": 1, "state": "PENDING", "date": "2024-01-01"},
+            {"id": 2, "state": "CANCELED", "date": "2024-01-02"},
+        ]
+        result = get_last_transactions(transactions, count=5)
+        assert len(result) == 0
 
-def get_last_transactions(transactions: List[Dict[str, Any]], count: int = 5) -> List[Dict[str, Any]]:
-    """
-    Возвращает последние выполненные транзакции.
+    def test_filter_by_currency_code(self, sample_transactions):
+        """Тест фильтрации по коду валюты."""
+        result = filter_by_currency_code(sample_transactions, "USD")
+        assert len(result) == 2  # В sample_transactions 2 транзакции в USD
 
-    Args:
-        transactions: Список всех транзакций
-        count: Количество возвращаемых транзакций
+    def test_filter_by_currency_code_with_no_matches(self, sample_transactions):
+        """Тест фильтрации по несуществующему коду валюты."""
+        result = filter_by_currency_code(sample_transactions, "JPY")
+        assert len(result) == 0
 
-    Returns:
-        Список последних выполненных транзакций
-    """
-    executed_transactions = filter_by_state(transactions, "EXECUTED")
-    sorted_transactions = sort_by_date(executed_transactions, descending=True)
-    return sorted_transactions[:count]
-
-
-def filter_by_currency_code(transactions: List[Dict[str, Any]], currency_code: str) -> List[Dict[str, Any]]:
-    """
-    Фильтрует транзакции по коду валюты.
-
-    Args:
-        transactions: Список транзакций
-        currency_code: Код валюты (например, "USD", "RUB")
-
-    Returns:
-        Отфильтрованный список транзакций
-    """
-    if not transactions:
-        return []
-
-    filtered = []
-    for transaction in transactions:
-        operation_amount = transaction.get("operationAmount", {})
-        currency = operation_amount.get("currency", {})
-        if currency.get("code") == currency_code:
-            filtered.append(transaction)
-
-    return filtered
+    def test_filter_by_currency_code_with_missing_currency(self):
+        """Тест фильтрации при отсутствии информации о валюте."""
+        transactions = [
+            {"id": 1, "operationAmount": {}},  # Пустой operationAmount
+            {"id": 2},  # Без operationAmount
+            {"id": 3, "operationAmount": {"currency": {}}},  # Пустой currency
+        ]
+        result = filter_by_currency_code(transactions, "USD")
+        assert len(result) == 0

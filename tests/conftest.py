@@ -1,5 +1,8 @@
 import pytest
 from typing import List, Dict, Any
+import tempfile
+import os
+import json
 
 
 @pytest.fixture
@@ -116,3 +119,37 @@ def sample_transactions() -> List[Dict[str, Any]]:
 def empty_transactions() -> List[Dict[str, Any]]:
     """Фикстура с пустым списком транзакций"""
     return []
+
+
+@pytest.fixture
+def temp_json_file():
+    """Создает временный JSON файл для тестирования."""
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
+        json.dump([
+            {
+                "id": 1,
+                "state": "EXECUTED",
+                "date": "2024-01-01T10:00:00",
+                "operationAmount": {
+                    "amount": "1000",
+                    "currency": {"code": "RUB", "name": "руб."}
+                },
+                "description": "Тестовая транзакция"
+            }
+        ], f)
+        f.close()
+        yield f.name
+        if os.path.exists(f.name):
+            os.unlink(f.name)
+
+
+@pytest.fixture
+def temp_csv_file():
+    """Создает временный CSV файл для тестирования."""
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as f:
+        f.write("id,amount,currency,description\n")
+        f.write("1,1000,RUB,Тестовая транзакция\n")
+        f.close()
+        yield f.name
+        if os.path.exists(f.name):
+            os.unlink(f.name)
