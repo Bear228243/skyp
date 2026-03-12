@@ -3,8 +3,9 @@
 """
 
 import re
-from typing import List, Dict, Any
 from collections import Counter
+from typing import Any, Dict, List
+
 from .logging_config import get_utils_logger
 
 logger = get_utils_logger()
@@ -30,7 +31,6 @@ def search_transactions(transactions: List[Dict[str, Any]], search_string: str) 
 
     try:
         # Создаем регулярное выражение с флагом регистронезависимости
-        # Ищем как отдельное слово, так и часть слова
         pattern = re.compile(re.escape(search_string), re.IGNORECASE)
 
         result = []
@@ -47,6 +47,10 @@ def search_transactions(transactions: List[Dict[str, Any]], search_string: str) 
         return []
 
 
+from collections import Counter
+from typing import List, Dict, Any, Counter as CounterType
+
+# ... в функции count_transactions_by_categories
 def count_transactions_by_categories(transactions: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
     """
     Подсчитывает количество транзакций в каждой категории.
@@ -63,22 +67,18 @@ def count_transactions_by_categories(transactions: List[Dict[str, Any]], categor
         return {category: 0 for category in categories}
 
     try:
-        # Создаем счетчик
-        counter = Counter()
+        # Создаем счетчик с аннотацией типа
+        counter: CounterType[str] = Counter()
 
         for transaction in transactions:
             description = transaction.get("description", "")
             if not description:
                 continue
 
-            # Проверяем каждую категорию
             for category in categories:
-                # Используем регулярное выражение для поиска точного соответствия
-                # или частичного вхождения (в зависимости от того, что нужно)
                 if re.search(re.escape(category), description, re.IGNORECASE):
                     counter[category] += 1
 
-        # Преобразуем в словарь с категориями из входного списка
         result = {category: counter.get(category, 0) for category in categories}
 
         logger.info(f"Подсчитаны категории: {result}")
@@ -106,7 +106,6 @@ def advanced_search_transactions(transactions: List[Dict[str, Any]], pattern: st
         return []
 
     try:
-        # Компилируем регулярное выражение (регистронезависимый режим)
         regex = re.compile(pattern, re.IGNORECASE)
 
         result = []

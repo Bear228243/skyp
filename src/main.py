@@ -10,25 +10,23 @@ from typing import List, Dict, Any, Optional
 # Добавляем src в путь Python
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.masks import get_mask_card_number, get_mask_account
-from src.widget import mask_account_card, get_date, format_transaction
-from src.processing import filter_by_state, sort_by_date, get_last_transactions
-from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
-from src.decorators import log
-from src.utils import load_transactions_from_file
-from src.external_api import get_amount_in_rubles
-from src.search import search_transactions, count_transactions_by_categories
+from src.widget import format_transaction  # noqa: E402
+from src.processing import filter_by_state, sort_by_date  # noqa: E402
+from src.generators import filter_by_currency  # noqa: E402
+from src.utils import load_transactions_from_file  # noqa: E402
+from src.external_api import get_amount_in_rubles  # noqa: E402
+from src.search import search_transactions, count_transactions_by_categories  # noqa: E402
 
 
 class TransactionApp:
     """Класс для управления приложением."""
 
-    VALID_STATUSES = ["EXECUTED", "CANCELED", "PENDING"]
+    VALID_STATUSES: List[str] = ["EXECUTED", "CANCELED", "PENDING"]
 
-    def __init__(self):
-        self.transactions = []
-        self.filtered_transactions = []
-        self.current_file_type = None
+    def __init__(self) -> None:
+        self.transactions: List[Dict[str, Any]] = []
+        self.filtered_transactions: List[Dict[str, Any]] = []
+        self.current_file_type: Optional[str] = None
 
     def print_header(self, text: str) -> None:
         """Выводит заголовок с разделителями."""
@@ -48,17 +46,17 @@ class TransactionApp:
         """Получает путь к файлу от пользователя."""
         print(f"\nВведите путь к {file_type.upper()} файлу (или нажмите Enter для использования файла по умолчанию):")
 
-        default_paths = {
+        default_paths: Dict[str, str] = {
             'json': 'data/operations.json',
             'csv': 'data/transactions.csv',
             'xlsx': 'data/transactions_excel.xlsx'
         }
 
-        user_input = input("> ").strip()
+        user_input: str = input("> ").strip()
 
         if not user_input:
             # Используем путь по умолчанию
-            default = default_paths.get(file_type)
+            default: Optional[str] = default_paths.get(file_type)
             if default and os.path.exists(default):
                 return default
             else:
@@ -77,17 +75,17 @@ class TransactionApp:
         Returns:
             True если загрузка успешна, иначе False
         """
-        file_path = self.get_file_path(file_type)
+        file_path: Optional[str] = self.get_file_path(file_type)
 
         if not file_path:
-            print(f"\n❌ Файл не найден или указан неверный путь.")
+            print("\n❌ Файл не найден или указан неверный путь.")
             return False
 
         print(f"\n📂 Загрузка транзакций из файла: {file_path}")
         self.transactions = load_transactions_from_file(file_path)
 
         if not self.transactions:
-            print(f"❌ Не удалось загрузить транзакции из файла.")
+            print("❌ Не удалось загрузить транзакции из файла.")
             return False
 
         self.current_file_type = file_type
@@ -107,7 +105,7 @@ class TransactionApp:
             print(f"Доступные статусы: {', '.join(self.VALID_STATUSES)}")
             print("(или '0' для возврата в главное меню)")
 
-            status = input("> ").strip().upper()
+            status: str = input("> ").strip().upper()
 
             if status == '0':
                 return None
@@ -129,7 +127,7 @@ class TransactionApp:
             True если ответ 'да', иначе False
         """
         while True:
-            answer = input(f"{question} (Да/Нет): ").strip().lower()
+            answer: str = input(f"{question} (Да/Нет): ").strip().lower()
             if answer in ['да', 'yes', 'y', 'д']:
                 return True
             elif answer in ['нет', 'no', 'n', 'н']:
@@ -148,7 +146,7 @@ class TransactionApp:
             print("\nОтсортировать по возрастанию или по убыванию?")
             print("(введите 'возрастание' или 'убывание', или '0' для отмены)")
 
-            order = input("> ").strip().lower()
+            order: str = input("> ").strip().lower()
 
             if order == '0':
                 return None
@@ -170,7 +168,7 @@ class TransactionApp:
         print("\nВведите слово для поиска в описании транзакций")
         print("(или нажмите Enter для пропуска):")
 
-        search = input("> ").strip()
+        search: str = input("> ").strip()
         return search if search else None
 
     def apply_filters(self) -> List[Dict[str, Any]]:
@@ -183,10 +181,10 @@ class TransactionApp:
         if not self.transactions:
             return []
 
-        result = self.transactions.copy()
+        result: List[Dict[str, Any]] = self.transactions.copy()
 
         # 1. Фильтрация по статусу
-        status = self.get_status_filter()
+        status: Optional[str] = self.get_status_filter()
         if status is None:
             return []  # Пользователь хочет вернуться в меню
 
@@ -194,22 +192,21 @@ class TransactionApp:
 
         # 2. Сортировка по дате
         if self.get_yes_no("\nОтсортировать операции по дате?"):
-            order = self.get_sort_order()
+            order: Optional[str] = self.get_sort_order()
             if order:
-                descending = (order == 'desc')
+                descending: bool = (order == 'desc')
                 result = sort_by_date(result, descending)
                 print(f"✅ Транзакции отсортированы по {'убыванию' if descending else 'возрастанию'}")
 
         # 3. Фильтрация по рублевым транзакциям
         if self.get_yes_no("\nВыводить только рублевые транзакции?"):
-            from src.generators import filter_by_currency
-            rub_transactions = list(filter_by_currency(result, "RUB"))
+            rub_transactions: List[Dict[str, Any]] = list(filter_by_currency(result, "RUB"))
             print(f"✅ Оставлено {len(rub_transactions)} рублевых транзакций")
             result = rub_transactions
 
         # 4. Поиск по описанию
         if self.get_yes_no("\nОтфильтровать список транзакций по определенному слову в описании?"):
-            search_string = self.get_search_string()
+            search_string: Optional[str] = self.get_search_string()
             if search_string:
                 result = search_transactions(result, search_string)
                 print(f"✅ Найдено {len(result)} транзакций по слову '{search_string}'")
@@ -236,10 +233,10 @@ class TransactionApp:
 
             # Дополнительная информация о конвертации валют
             try:
-                amount_in_rub = get_amount_in_rubles(transaction)
+                amount_in_rub: float = get_amount_in_rubles(transaction)
                 if amount_in_rub:
                     print(f"   (в рублях: {amount_in_rub:.2f} RUB)")
-            except:
+            except Exception:
                 pass
 
     def run(self) -> None:
@@ -249,14 +246,14 @@ class TransactionApp:
 
         while True:
             self.print_menu()
-            choice = input("> ").strip()
+            choice: str = input("> ").strip()
 
             if choice == '0':
                 print("\n👋 До свидания!")
                 break
 
             # Выбор типа файла
-            file_type = None
+            file_type: Optional[str] = None
             if choice == '1':
                 file_type = 'json'
             elif choice == '2':
@@ -274,7 +271,7 @@ class TransactionApp:
             print(f"\n✅ Для обработки выбран {file_type.upper()}-файл.")
 
             # Применение фильтров
-            filtered = self.apply_filters()
+            filtered: List[Dict[str, Any]] = self.apply_filters()
 
             # Отображение результатов
             print("\n" + "-" * 40)
@@ -283,9 +280,9 @@ class TransactionApp:
 
             # Подсчет категорий (дополнительная информация)
             if filtered:
-                categories = ["Перевод организации", "Перевод со счета на счет",
-                            "Перевод с карты на карту", "Открытие вклада"]
-                category_counts = count_transactions_by_categories(filtered, categories)
+                categories: List[str] = ["Перевод организации", "Перевод со счета на счет",
+                                         "Перевод с карты на карту", "Открытие вклада"]
+                category_counts: Dict[str, int] = count_transactions_by_categories(filtered, categories)
 
                 print("\n" + "-" * 40)
                 print("📊 СТАТИСТИКА ПО КАТЕГОРИЯМ:")
@@ -298,7 +295,7 @@ class TransactionApp:
 
 def main() -> None:
     """Основная функция приложения."""
-    app = TransactionApp()
+    app: TransactionApp = TransactionApp()
     app.run()
 
 
