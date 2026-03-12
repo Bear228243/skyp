@@ -153,7 +153,7 @@ def get_transaction_currency(transaction: Dict[str, Any]) -> str:
     try:
         operation_amount = transaction['operationAmount']
         currency_info = operation_amount['currency']
-        currency_code = currency_info['code']
+        currency_code: str = currency_info['code']  # Явно указываем тип
 
         logger.debug(f"Успешно извлечена валюта: {currency_code} для транзакции {transaction.get('id', 'Unknown')}")
         return currency_code

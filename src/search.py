@@ -47,6 +47,10 @@ def search_transactions(transactions: List[Dict[str, Any]], search_string: str) 
         return []
 
 
+from collections import Counter
+from typing import List, Dict, Any, Counter as CounterType
+
+# ... в функции count_transactions_by_categories
 def count_transactions_by_categories(transactions: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
     """
     Подсчитывает количество транзакций в каждой категории.
@@ -63,8 +67,8 @@ def count_transactions_by_categories(transactions: List[Dict[str, Any]], categor
         return {category: 0 for category in categories}
 
     try:
-        # Создаем счетчик
-        counter = Counter()
+        # Создаем счетчик с аннотацией типа
+        counter: CounterType[str] = Counter()
 
         for transaction in transactions:
             description = transaction.get("description", "")
