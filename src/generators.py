@@ -2,7 +2,7 @@
 Модуль с функциями-генераторами для работы с транзакциями.
 """
 
-from typing import Generator, Dict, Any, List
+from typing import Any, Dict, Generator, List
 
 
 def filter_by_currency(transactions: List[Dict[str, Any]], currency: str) -> Generator[Dict[str, Any], None, None]:

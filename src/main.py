@@ -2,22 +2,23 @@
 Основной модуль для запуска приложения с пользовательским интерфейсом.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 # Добавляем src в путь Python
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.masks import get_mask_card_number, get_mask_account
-from src.widget import mask_account_card, get_date, format_transaction
-from src.processing import filter_by_state, sort_by_date, get_last_transactions
-from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
-from src.decorators import log
-from src.utils import load_transactions_from_file
-from src.external_api import get_amount_in_rubles
-from src.search import search_transactions, count_transactions_by_categories
+from src.external_api import get_amount_in_rubles  # noqa: E402
+from src.generators import filter_by_currency  # noqa: E402
+from src.processing import filter_by_state, sort_by_date  # noqa: E402
+from src.search import (  # noqa: E402
+    count_transactions_by_categories,
+    search_transactions,
+)
+from src.utils import load_transactions_from_file  # noqa: E402
+from src.widget import format_transaction  # noqa: E402
 
 
 class TransactionApp:
@@ -80,14 +81,14 @@ class TransactionApp:
         file_path = self.get_file_path(file_type)
 
         if not file_path:
-            print(f"\n❌ Файл не найден или указан неверный путь.")
+            print("\n❌ Файл не найден или указан неверный путь.")
             return False
 
         print(f"\n📂 Загрузка транзакций из файла: {file_path}")
         self.transactions = load_transactions_from_file(file_path)
 
         if not self.transactions:
-            print(f"❌ Не удалось загрузить транзакции из файла.")
+            print("❌ Не удалось загрузить транзакции из файла.")
             return False
 
         self.current_file_type = file_type
@@ -202,7 +203,6 @@ class TransactionApp:
 
         # 3. Фильтрация по рублевым транзакциям
         if self.get_yes_no("\nВыводить только рублевые транзакции?"):
-            from src.generators import filter_by_currency
             rub_transactions = list(filter_by_currency(result, "RUB"))
             print(f"✅ Оставлено {len(rub_transactions)} рублевых транзакций")
             result = rub_transactions
@@ -239,7 +239,7 @@ class TransactionApp:
                 amount_in_rub = get_amount_in_rubles(transaction)
                 if amount_in_rub:
                     print(f"   (в рублях: {amount_in_rub:.2f} RUB)")
-            except:
+            except Exception:
                 pass
 
     def run(self) -> None:
@@ -284,7 +284,7 @@ class TransactionApp:
             # Подсчет категорий (дополнительная информация)
             if filtered:
                 categories = ["Перевод организации", "Перевод со счета на счет",
-                            "Перевод с карты на карту", "Открытие вклада"]
+                              "Перевод с карты на карту", "Открытие вклада"]
                 category_counts = count_transactions_by_categories(filtered, categories)
 
                 print("\n" + "-" * 40)
