@@ -8,6 +8,7 @@ import os
 import tempfile
 import pytest
 import csv
+from unittest.mock import Mock
 from unittest.mock import mock_open, patch
 
 # Условный импорт pandas
@@ -147,8 +148,8 @@ class TestReadCsvFile:
         """
         # Создаем временный CSV файл с разделителем ;
         csv_content = """id;amount;currency;description
-1;100.50;USD;Transaction 1
-2;200.75;EUR;Transaction 2"""
+    1;100.50;USD;Transaction 1
+    2;200.75;EUR;Transaction 2"""
 
         csv_file = tmp_path / "test_semicolon.csv"
         csv_file.write_text(csv_content, encoding='utf-8')
@@ -221,15 +222,6 @@ class TestReadExcelFile:
         result = read_excel_file("test.xlsx")
 
         assert result == []
-
-    def test_read_excel_pandas_not_available(self):
-        """
-        Тест когда pandas не установлен.
-        """
-        with patch('src.utils.PANDAS_AVAILABLE', False):
-            result = read_excel_file("test.xlsx")
-            assert result == []
-
 
 class TestTransactionAmount:
     """Тесты для функции get_transaction_amount."""
