@@ -4,10 +4,9 @@
 """
 
 import logging
-import os
 from logging.handlers import RotatingFileHandler
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 
 def setup_logger(
