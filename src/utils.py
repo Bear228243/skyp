@@ -5,9 +5,11 @@
 
 import json
 import os
-import pandas as pd
-from typing import List, Dict, Any, Union
 from pathlib import Path
+from typing import Any, Dict, List, Union
+
+import pandas as pd
+
 from .logging_config import get_utils_logger
 
 logger = get_utils_logger()
@@ -193,7 +195,7 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
         # Проверяем поля operationAmount
         operation_amount = transaction["operationAmount"]
         if not isinstance(operation_amount, dict):
-            logger.warning(f"operationAmount не является словарем")
+            logger.debug(f"Валидация структуры транзакции: {transaction.get('id', 'Unknown')}")
             return False
 
         for field in operation_amount_fields:
@@ -204,7 +206,7 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
         # Проверяем поля currency
         currency = operation_amount["currency"]
         if not isinstance(currency, dict):
-            logger.warning(f"currency не является словарем")
+            logger.debug(f"Структура транзакции {transaction['id']} прошла валидацию")
             return False
 
         for field in currency_fields:

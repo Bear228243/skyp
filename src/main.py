@@ -2,20 +2,23 @@
 Основной модуль для запуска приложения с пользовательским интерфейсом.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 # Добавляем src в путь Python
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.widget import format_transaction  # noqa: E402
-from src.processing import filter_by_state, sort_by_date  # noqa: E402
-from src.generators import filter_by_currency  # noqa: E402
-from src.utils import load_transactions_from_file  # noqa: E402
 from src.external_api import get_amount_in_rubles  # noqa: E402
-from src.search import search_transactions, count_transactions_by_categories  # noqa: E402
+from src.generators import filter_by_currency  # noqa: E402
+from src.processing import filter_by_state, sort_by_date  # noqa: E402
+from src.search import (  # noqa: E402
+    count_transactions_by_categories,
+    search_transactions,
+)
+from src.utils import load_transactions_from_file  # noqa: E402
+from src.widget import format_transaction  # noqa: E402
 
 
 class TransactionApp:

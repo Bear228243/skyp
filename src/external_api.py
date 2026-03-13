@@ -83,7 +83,7 @@ class CurrencyConverter:
                 logger.error(error_msg)
                 raise ValueError(error_msg)
 
-            rate: float = rates[to_currency]  # Явно указываем тип
+            rate: float = rates[to_currency]
             logger.info(f"Успешно получен курс обмена: {from_currency} -> {to_currency} = {rate}")
             return rate
 
