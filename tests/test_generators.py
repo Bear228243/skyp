@@ -1,152 +1,152 @@
 """
 Тесты для модуля generators.
-Проверяет корректность работы функций-генераторов для обработки транзакций.
+Проверяет функции-генераторы для работы с транзакциями.
 """
 
 import pytest
 from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
 
 
-@pytest.fixture
-def sample_transactions():
-    """Фикстура предоставляет пример данных транзакций для тестирования."""
-    return [
-        {
-            "id": 939719570,
-            "state": "EXECUTED",
-            "date": "2018-06-30T02:08:58.425572",
-            "operationAmount": {
-                "amount": "9824.07",
-                "currency": {
-                    "name": "USD",
-                    "code": "USD"
-                }
-            },
-            "description": "Перевод организации",
-            "from": "Счет 75106830613657916952",
-            "to": "Счет 11776614605963066702"
-        },
-        {
-            "id": 142264268,
-            "state": "EXECUTED",
-            "date": "2019-04-04T23:20:05.206878",
-            "operationAmount": {
-                "amount": "79114.93",
-                "currency": {
-                    "name": "USD",
-                    "code": "USD"
-                }
-            },
-            "description": "Перевод со счета на счет",
-            "from": "Счет 19708645243227258542",
-            "to": "Счет 75651667383060284188"
-        },
-        {
-            "id": 873106923,
-            "state": "EXECUTED",
-            "date": "2019-03-23T01:09:46.296404",
-            "operationAmount": {
-                "amount": "43318.34",
-                "currency": {
-                    "name": "руб.",
-                    "code": "RUB"
-                }
-            },
-            "description": "Перевод со счета на счет",
-            "from": "Счет 44812258784861134719",
-            "to": "Счет 74489636417521191160"
-        },
-        {
-            "id": 895315941,
-            "state": "EXECUTED",
-            "date": "2018-08-19T04:27:37.904916",
-            "operationAmount": {
-                "amount": "56883.54",
-                "currency": {
-                    "name": "USD",
-                    "code": "USD"
-                }
-            },
-            "description": "Перевод с карты на карту",
-            "from": "Visa Classic 6831982476737658",
-            "to": "Visa Platinum 8990922113665229"
-        },
-        {
-            "id": 594226727,
-            "state": "CANCELED",
-            "date": "2018-09-12T21:27:25.241689",
-            "operationAmount": {
-                "amount": "67314.70",
-                "currency": {
-                    "name": "руб.",
-                    "code": "RUB"
-                }
-            },
-            "description": "Перевод организации",
-            "from": "Visa Platinum 1246377376343588",
-            "to": "Счет 14211924144426031657"
-        }
-    ]
-
-
 class TestFilterByCurrency:
     """Тесты для функции filter_by_currency."""
 
-    def test_filter_usd_transactions(self, sample_transactions):
-        """Тест фильтрации транзакций в USD."""
-        usd_transactions = list(filter_by_currency(sample_transactions, "USD"))
-        assert len(usd_transactions) == 3
-        for transaction in usd_transactions:
+    @pytest.fixture
+    def transactions(self):
+        """Фикстура с тестовыми транзакциями."""
+        return [
+            {
+                "id": 1,
+                "operationAmount": {
+                    "amount": "100.00",
+                    "currency": {"code": "USD"}
+                }
+            },
+            {
+                "id": 2,
+                "operationAmount": {
+                    "amount": "200.00",
+                    "currency": {"code": "RUB"}
+                }
+            },
+            {
+                "id": 3,
+                "operationAmount": {
+                    "amount": "300.00",
+                    "currency": {"code": "USD"}
+                }
+            },
+            {
+                "id": 4,
+                "operationAmount": {
+                    "amount": "400.00",
+                    "currency": {"code": "EUR"}
+                }
+            },
+        ]
+
+    def test_filter_usd_transactions(self, transactions):
+        """Тест фильтрации USD транзакций."""
+        result = list(filter_by_currency(transactions, "USD"))
+        assert len(result) == 2
+        for transaction in result:
             assert transaction["operationAmount"]["currency"]["code"] == "USD"
 
-    def test_filter_rub_transactions(self, sample_transactions):
-        """Тест фильтрации транзакций в RUB."""
-        rub_transactions = list(filter_by_currency(sample_transactions, "RUB"))
-        assert len(rub_transactions) == 2
-        for transaction in rub_transactions:
-            assert transaction["operationAmount"]["currency"]["code"] == "RUB"
+    def test_filter_rub_transactions(self, transactions):
+        """Тест фильтрации RUB транзакций."""
+        result = list(filter_by_currency(transactions, "RUB"))
+        assert len(result) == 1
+        assert result[0]["id"] == 2
 
-    @pytest.mark.parametrize("currency_code, expected_count", [
-        ("USD", 3),  # Должно найти 3 транзакции в USD
-        ("RUB", 2),  # Должно найти 2 транзакции в RUB
-        ("EUR", 0),  # Не должно найти транзакций в EUR
-    ])
-    def test_filter_parametrized(self, sample_transactions, currency_code, expected_count):
-        """Параметризованный тест для фильтрации по разным валютам."""
-        transactions = list(filter_by_currency(sample_transactions, currency_code))
-        assert len(transactions) == expected_count
+    def test_filter_no_matches(self, transactions):
+        """Тест фильтрации без совпадений."""
+        result = list(filter_by_currency(transactions, "GBP"))
+        assert len(result) == 0
+
+    def test_filter_empty_list(self):
+        """Тест фильтрации пустого списка."""
+        result = list(filter_by_currency([], "USD"))
+        assert len(result) == 0
+
+    def test_filter_missing_operation_amount(self):
+        """Тест фильтрации при отсутствии operationAmount."""
+        transactions = [
+            {"id": 1},
+            {"id": 2, "operationAmount": {}},
+            {"id": 3, "operationAmount": {"currency": {"code": "USD"}}}
+        ]
+        result = list(filter_by_currency(transactions, "USD"))
+        assert len(result) == 1
+        assert result[0]["id"] == 3
 
 
 class TestTransactionDescriptions:
     """Тесты для функции transaction_descriptions."""
 
-    def test_descriptions_generation(self, sample_transactions):
-        """Тест генерации описаний транзакций."""
-        descriptions = list(transaction_descriptions(sample_transactions))
-        expected_descriptions = [
-            "Перевод организации",
-            "Перевод со счета на счет",
-            "Перевод со счета на счет",
-            "Перевод с карты на карту",
-            "Перевод организации"
+    @pytest.fixture
+    def transactions(self):
+        """Фикстура с тестовыми транзакциями."""
+        return [
+            {"id": 1, "description": "Перевод организации"},
+            {"id": 2, "description": "Перевод со счета на счет"},
+            {"id": 3, "description": "Перевод с карты на карту"},
         ]
-        assert descriptions == expected_descriptions
+
+    def test_descriptions_generation(self, transactions):
+        """Тест генерации описаний."""
+        descriptions = list(transaction_descriptions(transactions))
+        assert len(descriptions) == 3
+        assert descriptions[0] == "Перевод организации"
+        assert descriptions[1] == "Перевод со счета на счет"
+        assert descriptions[2] == "Перевод с карты на карту"
+
+    def test_empty_list(self):
+        """Тест с пустым списком."""
+        descriptions = list(transaction_descriptions([]))
+        assert len(descriptions) == 0
+
+    def test_missing_description(self):
+        """Тест при отсутствии поля description."""
+        transactions = [
+            {"id": 1},
+            {"id": 2, "description": ""},
+            {"id": 3, "description": "Есть описание"}
+        ]
+        descriptions = list(transaction_descriptions(transactions))
+        assert len(descriptions) == 1
+        assert descriptions[0] == "Есть описание"
 
 
 class TestCardNumberGenerator:
     """Тесты для функции card_number_generator."""
 
-    @pytest.mark.parametrize("start, stop, expected_output", [
-        (1, 5, [
-            "0000 0000 0000 0001",
-            "0000 0000 0000 0002",
-            "0000 0000 0000 0003",
-            "0000 0000 0000 0004",
-            "0000 0000 0000 0005"
-        ]),
-        (1234, 1234, ["0000 0000 0000 1234"]),
-    ])
-    def test_card_number_generation(self, start, stop, expected_output):
-        """Параметризованный тест генерации номеров карт."""
-        generated_numbers = list(card_number_generator(start, stop))
-        assert generated_numbers == expected_output
+    def test_generate_range(self):
+        """Тест генерации диапазона номеров."""
+        generator = card_number_generator(1, 5)
+        result = list(generator)
+        assert len(result) == 5
+        assert result[0] == "0000 0000 0000 0001"
+        assert result[1] == "0000 0000 0000 0002"
+        assert result[2] == "0000 0000 0000 0003"
+        assert result[3] == "0000 0000 0000 0004"
+        assert result[4] == "0000 0000 0000 0005"
+
+    def test_single_number(self):
+        """Тест генерации одного номера."""
+        generator = card_number_generator(1234, 1234)
+        result = list(generator)
+        assert len(result) == 1
+        assert result[0] == "0000 0000 0000 1234"
+
+    def test_invalid_range(self):
+        """Тест с некорректным диапазоном (start > stop)."""
+        generator = card_number_generator(10, 5)
+        result = list(generator)
+        assert len(result) == 0
+
+    def test_large_numbers(self):
+        """Тест с большими числами."""
+        generator = card_number_generator(9999999999999995, 9999999999999999)
+        result = list(generator)
+        assert len(result) == 5
+        assert result[0] == "9999 9999 9999 9995"
+        assert result[-1] == "9999 9999 9999 9999"
