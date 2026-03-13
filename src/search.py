@@ -3,8 +3,8 @@
 """
 
 import re
-from typing import List, Dict, Any
 from collections import Counter
+from typing import List, Dict, Any
 from .logging_config import get_utils_logger
 
 logger = get_utils_logger()
@@ -30,7 +30,6 @@ def search_transactions(transactions: List[Dict[str, Any]], search_string: str) 
 
     try:
         # Создаем регулярное выражение с флагом регистронезависимости
-        # Ищем как отдельное слово, так и часть слова
         pattern = re.compile(re.escape(search_string), re.IGNORECASE)
 
         result = []
@@ -71,14 +70,10 @@ def count_transactions_by_categories(transactions: List[Dict[str, Any]], categor
             if not description:
                 continue
 
-            # Проверяем каждую категорию
             for category in categories:
-                # Используем регулярное выражение для поиска точного соответствия
-                # или частичного вхождения (в зависимости от того, что нужно)
                 if re.search(re.escape(category), description, re.IGNORECASE):
                     counter[category] += 1
 
-        # Преобразуем в словарь с категориями из входного списка
         result = {category: counter.get(category, 0) for category in categories}
 
         logger.info(f"Подсчитаны категории: {result}")
@@ -106,7 +101,6 @@ def advanced_search_transactions(transactions: List[Dict[str, Any]], pattern: st
         return []
 
     try:
-        # Компилируем регулярное выражение (регистронезависимый режим)
         regex = re.compile(pattern, re.IGNORECASE)
 
         result = []
