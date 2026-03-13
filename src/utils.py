@@ -5,11 +5,9 @@
 
 import json
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Union
-
 import pandas as pd
-
+from typing import List, Dict, Any, Union
+from pathlib import Path
 from .logging_config import get_utils_logger
 
 logger = get_utils_logger()
@@ -153,7 +151,7 @@ def get_transaction_currency(transaction: Dict[str, Any]) -> str:
     try:
         operation_amount = transaction['operationAmount']
         currency_info = operation_amount['currency']
-        currency_code: str = currency_info['code']  # Явно указываем тип
+        currency_code: str = currency_info['code']
 
         logger.debug(f"Успешно извлечена валюта: {currency_code} для транзакции {transaction.get('id', 'Unknown')}")
         return currency_code
@@ -174,6 +172,11 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
     Returns:
         True если структура корректна, иначе False
     """
+    # Проверяем, что transaction является словарем
+    if not isinstance(transaction, dict):
+        logger.error(f"Передан не словарь: {type(transaction)}")
+        return False
+
     logger.debug(f"Валидация структуры транзакции: {transaction.get('id', 'Unknown')}")
 
     required_fields = ["id", "operationAmount"]
@@ -189,6 +192,10 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
 
         # Проверяем поля operationAmount
         operation_amount = transaction["operationAmount"]
+        if not isinstance(operation_amount, dict):
+            logger.warning(f"operationAmount не является словарем")
+            return False
+
         for field in operation_amount_fields:
             if field not in operation_amount:
                 logger.warning(f"Отсутствует поле '{field}' в operationAmount транзакции {transaction['id']}")
@@ -196,6 +203,10 @@ def validate_transaction_structure(transaction: Dict[str, Any]) -> bool:
 
         # Проверяем поля currency
         currency = operation_amount["currency"]
+        if not isinstance(currency, dict):
+            logger.warning(f"currency не является словарем")
+            return False
+
         for field in currency_fields:
             if field not in currency:
                 logger.warning(f"Отсутствует поле '{field}' в currency транзакции {transaction['id']}")
@@ -220,15 +231,19 @@ def load_transactions_from_file(file_path: str) -> List[Dict[str, Any]]:
     Returns:
         Список транзакций или пустой список в случае ошибки
     """
-    path = Path(file_path)
-    suffix = path.suffix.lower()
+    try:
+        path = Path(file_path)
+        suffix = path.suffix.lower()
 
-    if suffix == '.json':
-        return read_json_file(file_path)
-    elif suffix == '.csv':
-        return read_csv_file(file_path)
-    elif suffix in ['.xlsx', '.xls']:
-        return read_excel_file(file_path)
-    else:
-        logger.error(f"Неподдерживаемый формат файла: {suffix}")
+        if suffix == '.json':
+            return read_json_file(file_path)
+        elif suffix == '.csv':
+            return read_csv_file(file_path)
+        elif suffix in ['.xlsx', '.xls']:
+            return read_excel_file(file_path)
+        else:
+            logger.error(f"Неподдерживаемый формат файла: {suffix}")
+            return []
+    except Exception as e:
+        logger.error(f"Ошибка при загрузке файла {file_path}: {e}")
         return []
