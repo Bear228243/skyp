@@ -225,7 +225,8 @@ class TestReadExcelFile:
         """
         Тест когда pandas не установлен.
         """
-        with patch('src.utils.PANDAS_AVAILABLE', False):
+        # Создаем мок для pandas.read_excel, который выбрасывает исключение
+        with patch('pandas.read_excel', side_effect=ImportError("No module named 'pandas'")):
             result = read_excel_file("test.xlsx")
             assert result == []
 
