@@ -2,11 +2,13 @@
 Тесты для системы логирования.
 """
 
-import os
 import logging
+import os
+
 import pytest
-from src.logging_config import setup_logger, get_utils_logger, get_masks_logger
-from src.masks import get_mask_card_number, get_mask_account
+
+from src.logging_config import get_masks_logger, get_utils_logger, setup_logger
+from src.masks import get_mask_account, get_mask_card_number
 
 
 @pytest.fixture

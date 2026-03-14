@@ -4,10 +4,11 @@
 """
 
 import pytest
+
 from src.search import (
-    search_transactions,
+    advanced_search_transactions,
     count_transactions_by_categories,
-    advanced_search_transactions
+    search_transactions,
 )
 
 

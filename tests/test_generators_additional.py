@@ -3,7 +3,6 @@
 Проверяет граничные случаи и обработку ошибок.
 """
 
-import pytest
 from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
 
 
@@ -69,7 +68,7 @@ class TestGeneratorsAdditional:
             {"id": 1},
             {"id": 2, "description": ""},
             {"id": 3, "description": "Тестовое описание"},
-            {"id": 4, "description": None}  # type: ignore
+            {"id": 4, "description": None}
         ]
         result = list(transaction_descriptions(transactions))
         assert len(result) == 1

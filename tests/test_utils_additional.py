@@ -3,15 +3,16 @@
 Проверяет граничные случаи и обработку ошибок.
 """
 
-import pytest
 from unittest.mock import patch
 
+import pytest
+
 from src.utils import (
-    read_json_file,
-    load_transactions_from_file,
-    validate_transaction_structure,
     get_transaction_amount,
-    get_transaction_currency
+    get_transaction_currency,
+    load_transactions_from_file,
+    read_json_file,
+    validate_transaction_structure,
 )
 
 

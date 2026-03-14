@@ -7,9 +7,7 @@ import json
 import os
 import tempfile
 import pytest
-import csv
-from unittest.mock import Mock
-from unittest.mock import mock_open, patch
+from unittest.mock import Mock, mock_open, patch
 
 # Условный импорт pandas
 try:
@@ -222,6 +220,15 @@ class TestReadExcelFile:
         result = read_excel_file("test.xlsx")
 
         assert result == []
+
+    def test_read_excel_pandas_not_available(self):
+        """
+        Тест когда pandas не установлен.
+        """
+        with patch('src.utils.PANDAS_AVAILABLE', False):
+            result = read_excel_file("test.xlsx")
+            assert result == []
+
 
 class TestTransactionAmount:
     """Тесты для функции get_transaction_amount."""

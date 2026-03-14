@@ -4,7 +4,13 @@
 """
 
 import pytest
-from src.processing import filter_by_state, sort_by_date, get_last_transactions, filter_by_currency_code
+
+from src.processing import (
+    filter_by_currency_code,
+    filter_by_state,
+    get_last_transactions,
+    sort_by_date,
+)
 
 
 @pytest.fixture
