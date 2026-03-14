@@ -4,13 +4,11 @@
 """
 
 import os
-import pytest
 from unittest.mock import Mock, patch
 
-from src.external_api import (
-    CurrencyConverter,
-    get_amount_in_rubles
-)
+import pytest
+
+from src.external_api import CurrencyConverter, get_amount_in_rubles
 
 
 @pytest.fixture
