@@ -4,7 +4,7 @@
 """
 
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict
 
 import requests
 from dotenv import load_dotenv
@@ -83,7 +83,7 @@ class CurrencyConverter:
                 logger.error(error_msg)
                 raise ValueError(error_msg)
 
-            rate = rates[to_currency]
+            rate: float = rates[to_currency]
             logger.info(f"Успешно получен курс обмена: {from_currency} -> {to_currency} = {rate}")
             return rate
 
@@ -125,9 +125,10 @@ class CurrencyConverter:
                 exchange_rate = self.get_exchange_rate(currency, "RUB")
                 return amount * exchange_rate
 
-            # Для других валют возвращаем исходную сумму (или можно выбросить исключение)
+            # Для других валют возвращаем исходную сумму
             logger.warning(
-                f"Внимание: валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма.")
+                f"Валюта {currency} не поддерживается для конвертации. Возвращена исходная сумма.")
+            return amount
 
         except (KeyError, ValueError) as e:
             raise ValueError(f"Ошибка при обработке транзакции: {e}")
